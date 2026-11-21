@@ -274,6 +274,17 @@ textarea.inp{resize:vertical;font-size:17px;line-height:1.4;font-weight:400}
 .gr .pl{fill:none;stroke:var(--accent-ink);stroke-width:2.4;stroke-linejoin:round}
 .gr .pl2{fill:none;stroke:var(--c2);stroke-width:2.4;stroke-linejoin:round}
 .gr .il{stroke:var(--accent-ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.gr .bx{fill:var(--card);stroke:var(--accent-ink);stroke-width:1.3}
+.gr .bx.k{fill:var(--accent-ink);fill-opacity:.17}
+.gr .bx.h{fill:var(--warn-soft);stroke:var(--c2)}
+.gr .bv{font-size:11.5px;fill:var(--ink);font-variant-numeric:tabular-nums}
+.gr .bl{font-size:12.5px;font-weight:600;fill:var(--ink)}
+.gr .bn{font-size:12.5px;fill:var(--ink)}
+.sol .svgw{margin:6px 0 2px}
+.newtip{display:flex;gap:8px;align-items:flex-start;background:var(--accent-soft);color:var(--ink);border-radius:10px;padding:8px 11px;margin:0 0 10px;font-size:14.5px;line-height:1.4}.newtip svg{flex:0 0 auto;width:18px;height:18px;margin-top:1px;color:var(--accent-ink)}
+.rcp{border:1px solid var(--line);border-radius:10px;padding:8px 12px;line-height:1.55;max-width:300px}.rcp b{font-family:var(--f-display)}
+.hw{border:1px dashed var(--line);border-radius:10px;padding:8px 12px;background:var(--chip);font-style:italic;line-height:1.45}
+.hw p{margin:2px 0}.hw .hwh{font-style:normal;font-weight:600;color:var(--muted);font-size:13px;margin-top:6px}
 .gr .idc{fill:var(--accent-ink);stroke:var(--accent-ink);stroke-width:2.4}
 .gr .ido{fill:var(--card);stroke:var(--accent-ink);stroke-width:2.4}
 .tbl{width:100%;border-collapse:collapse;font-size:16px}
@@ -287,7 +298,7 @@ table.pblk tr>:last-child{border-right:0}table.pblk tr:last-child>*{border-botto
 table.pblk th{color:var(--muted);font-weight:500;background:var(--chip);font-size:13.5px;white-space:normal;max-width:150px}
 table.pblk.tx{font-family:inherit;font-size:15.5px;font-variant-numeric:tabular-nums}table.pblk.tx td{line-height:1.35}
 table.pblk.nohead th{font-size:15.5px;color:var(--ink)}
-table.pblk td.pb{background:var(--accent-soft)}
+table.pblk td.pb,table.pblk td.tdq{background:var(--accent-soft)}
 table.pblk tr.pr td{background:var(--warn-soft)}
 /* algebra wall: every brick stands on two bricks */
 .wall{display:flex;flex-direction:column;align-items:center;gap:4px;margin:6px 0 2px;width:max-content;max-width:100%;font-variant-numeric:tabular-nums}
@@ -4008,8 +4019,969 @@ topic8({ id: '8.5x', sec: '8.5', en: 'Harder calculations with fractions and dec
     throw new Error('8.5x');
   } });
 
+/* ===================== CHAPTER 11 · RATIO AND PROPORTION ===================== */
+/* Marta has not met this chapter at school yet, so the steps say WHY each move works, and every ratio solution draws a bar model
+   (one row of equal boxes for each share). The same builders make the workbook's own questions (R11B, used by m_school.js). */
+chapter(11, 'Ratio and proportion');
+section('11.1', 'Using ratios');
+section('11.2', 'Direct and inverse proportion');
+
+/* ---------- small helpers ---------- */
+const rat11 = a => a.join(' : ');                                   /* 2 : 5 : 6 — spaces that never break */
+const sum11 = a => a.reduce((t, x) => t + x, 0);
+const cap11 = s => s.charAt(0).toUpperCase() + s.slice(1);
+const tn11 = v => Math.abs(v) >= 10000 ? texBig(fx(v)) : fx(v);            /* a number inside TeX */
+const G11 = { Franco: 'M', Tina: 'F', Kim: 'F', Ahmad: 'M', Alicia: 'F', Abdul: 'M', Benji: 'M', Caen: 'M', Sion: 'M', Bikka: 'M', Zosia: 'F', Abie: 'M', Mia: 'F', Jess: 'F', Hank: 'M', Julio: 'M' };
+const he11 = nm => (G11[nm] || (NAMES_F.includes(nm) ? 'F' : 'M')) === 'F' ? 'she' : 'he';
+const his11 = nm => he11(nm) === 'she' ? 'her' : 'his';
+const twoNames11 = r => { const a = r.sh(NAMES_F.concat(NAMES_M)); return [a[0], a[1]]; };
+const threeNames11 = r => { const a = r.sh(NAMES_F.concat(NAMES_M)); return [a[0], a[1], a[2]]; };
+const esx11 = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* what is being shared: money, a measure with a unit, or a count of things (a noun for each share and one for the total) */
+const KM11 = { u: '$' };
+const KU11 = u => ({ u });
+const KC11 = (nouns, tot) => ({ nouns, tot });
+function q11(v, K, j) { if (K.u === '$') return usd(v); if (K.u) return big(v) + ' ' + K.u; return big(v) + ' ' + (j == null ? K.tot : K.nouns[j]); }      /* $65 · 250 g · 14 sweets */
+function qs11(v, K) { return K.u === '$' ? '$' + big(v) : K.u ? big(v) + ' ' + K.u : big(v); }                                                        /* the same, short, inside a picture */
+function qa11(v, K, j) { return K.u === '$' ? N(money2(v), { pre: '$' }) : N(fx(v), { unit: K.u || (j == null ? K.tot : K.nouns[j]) }); }              /* the answer box */
+const ux11 = K => K.u && K.u !== '$' ? '\\ \\text{' + K.u + '}' : '';                                                                             /* a unit after a calculation (kept out of the arithmetic) */
+
+/* ---------- the bar model: one row of equal boxes for each share ----------
+   rows: [{ lab, n, note, k (the share we know), hl: [box numbers drawn highlighted] }]; o: { part: text written in every box, foot: a line under the bars } */
+function svgBars(rows, o) {
+  o = o || {}; const tw = s => String(s).length * 7.1;
+  const maxN = Math.max(...rows.map(r => r.n));
+  const labW = Math.round(Math.max(30, Math.min(112, Math.max(...rows.map(r => tw(r.lab))) + 12)));
+  const noteW = Math.round(Math.max(20, Math.min(124, Math.max(...rows.map(r => tw(r.note || ''))) + 14)));
+  const bw = Math.max(15, Math.min(40, Math.floor((336 - labW - noteW) / maxN))); const bh = 26, gap = 11;
+  let y = 4, s = '';
+  rows.forEach(r => {
+    s += '<text class="bl" x="' + (labW - 8) + '" y="' + (y + 17.5) + '" text-anchor="end">' + esx11(r.lab) + '</text>';
+    for (let k = 0; k < r.n; k++) { const x = labW + k * bw;
+      s += '<rect class="bx' + (r.k ? ' k' : '') + ((r.hl || []).includes(k) ? ' h' : '') + '" x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '"/>';
+      if (o.part != null && tw(o.part) <= bw - 3) s += '<text class="bv" x="' + (x + bw / 2) + '" y="' + (y + 17.5) + '" text-anchor="middle">' + esx11(o.part) + '</text>'; }
+    if (r.note) s += '<text class="bn" x="' + (labW + r.n * bw + 8) + '" y="' + (y + 17.5) + '">' + esx11(r.note) + '</text>';
+    y += bh + gap; });
+  if (o.foot) { s += '<text class="bn" x="' + labW + '" y="' + (y + 8) + '">' + esx11(o.foot) + '</text>'; y += 22; }
+  const W = Math.min(340, labW + maxN * bw + noteW), H = y - gap + 6;
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:' + W + 'px;max-width:100%" class="gr bm" role="img" aria-label="bar model">' + s + '</svg>';
+}
+
+const tx11 = (v, w) => tn11(v) + '\\text{ ' + w + '}';                                   /* 6\text{ days} */
+
+/* =====================================================================================================================
+   11.1 USING RATIOS
+   ===================================================================================================================== */
+/* ---------- contexts with two shares ----------
+   K what is shared · lab names in the picture · sh(k) the share in a sentence · is(k, v) "Tina gets $26" · isT(T)
+   intro(a) the ratio sentence · know(i, v) the share we are told · ask(j) / askT the questions · labS(j) / labT labels of answer boxes
+   introT(a, T) when the total is given · more(b, s, d) when share b is d more than share s · pv sizes of one part · rat ratios */
+const CTX2 = {
+  pastry: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_M); const X = ['flour', 'butter']; const K = KU11('g'); return { K, lab: ['Flour', 'Butter'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'The ' + X[k] + ' is ' + q11(v, K), isT: T => 'The total mass is ' + q11(T, K),
+    intro: a => 'To make pastry, ' + M + ' uses flour and butter in the ratio ' + rat11(a) + '.', know: (i, v) => cap11(he11(M)) + ' uses ' + q11(v, K) + ' of ' + X[i] + '.',
+    ask: j => 'What mass of ' + X[j] + ' does ' + M + ' use?', askT: 'What is the total mass of flour and butter in the pastry?', labS: j => 'Mass of ' + X[j], labT: 'Total mass of flour and butter',
+    introT: (a, T) => M + ' makes ' + q11(T, K) + ' of pastry from flour and butter in the ratio ' + rat11(a) + '.', more: (b, s, d) => cap11(he11(M)) + ' uses ' + q11(d, K) + ' more ' + X[b] + ' than ' + X[s] + '.',
+    pv: [10, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150], rat: [[2, 1], [3, 1], [3, 2], [5, 2], [5, 3], [4, 1]] }; },
+  drink: (r) => { const X = ['pineapple', 'peach']; const K = KU11('mL'); return { K, lab: ['Pineapple', 'Peach'],
+    sh: k => 'the ' + X[k] + ' juice', is: (k, v) => 'There is ' + q11(v, K) + ' of ' + X[k] + ' juice', isT: T => 'There is ' + q11(T, K) + ' of fruit juice altogether',
+    intro: a => 'A fruit drink contains pineapple juice and peach juice in the ratio ' + rat11(a) + '.', know: (i, v) => 'There is ' + q11(v, K) + ' of ' + X[i] + ' juice in the drink.',
+    ask: j => 'How many millilitres of ' + X[j] + ' juice are in the drink?', askT: 'How much fruit juice is in the drink altogether?', labS: j => cap11(X[j]) + ' juice', labT: 'Fruit juice altogether',
+    introT: (a, T) => 'A fruit drink of ' + q11(T, K) + ' contains pineapple juice and peach juice in the ratio ' + rat11(a) + '.', more: (b, s, d) => 'The drink has ' + q11(d, K) + ' more ' + X[b] + ' juice than ' + X[s] + ' juice.',
+    pv: [25, 50, 60, 75, 80, 100, 120, 125, 150, 200], rat: [[4, 3], [3, 2], [5, 2], [2, 3], [3, 5], [5, 4]] }; },
+  money: (r, nm) => { const P = nm || twoNames11(r); const K = KM11; return { K, lab: P,
+    sh: k => P[k] + '’s share', is: (k, v) => P[k] + ' gets ' + usd(v), isT: T => 'They share ' + usd(T),
+    intro: a => P[0] + ' and ' + P[1] + ' share some money in the ratio ' + rat11(a) + '.', know: (i, v) => P[i] + ' gets ' + usd(v) + '.',
+    ask: j => 'How much money does ' + P[j] + ' get?', askT: 'How much money do they share?', labS: j => P[j] + ' gets', labT: 'Money they share',
+    introT: (a, T) => P[0] + ' and ' + P[1] + ' share ' + usd(T) + ' in the ratio ' + rat11(a) + '.', more: (b, s, d) => P[b] + ' gets ' + usd(d) + ' more than ' + P[s] + '.',
+    pv: [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 18, 20, 25], rat: [[5, 2], [3, 2], [4, 3], [7, 3], [5, 3], [2, 3], [3, 4], [4, 5], [3, 7]] }; },
+  sweets: (r, nm) => { const P = nm || twoNames11(r); const K = KC11(['sweets', 'sweets'], 'sweets'); return { K, lab: P,
+    sh: k => P[k] + '’s sweets', is: (k, v) => P[k] + ' gets ' + q11(v, K, k), isT: T => 'They share ' + q11(T, K),
+    intro: a => P[0] + ' and ' + P[1] + ' share some sweets in the ratio ' + rat11(a) + '.', know: (i, v) => P[i] + ' gets ' + q11(v, K, i) + '.',
+    ask: j => 'How many sweets does ' + P[j] + ' get?', askT: 'How many sweets do they share?', labS: j => P[j] + ' gets', labT: 'Sweets they share',
+    introT: (a, T) => P[0] + ' and ' + P[1] + ' share ' + q11(T, K) + ' in the ratio ' + rat11(a) + '.', more: (b, s, d) => P[b] + ' gets ' + q11(d, K) + ' more than ' + P[s] + '.',
+    pv: [2, 3, 4, 5, 6, 7, 8, 9, 10, 12], rat: [[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 3], [4, 3], [5, 2]] }; },
+  pie: () => { const X = ['onions', 'broccoli']; const K = KU11('g'); return { K, lab: ['Onions', 'Broccoli'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'The ' + X[k] + (k ? ' is ' : ' are ') + q11(v, K), isT: T => 'The total mass of vegetables is ' + q11(T, K),
+    intro: a => 'A vegetable pie contains onions and broccoli in the ratio ' + rat11(a) + '.', know: (i, v) => 'The pie contains ' + q11(v, K) + ' of ' + X[i] + '.',
+    ask: j => 'What mass of ' + X[j] + ' is in the pie?', askT: 'What is the total mass of vegetables in the pie?', labS: j => 'Mass of ' + X[j], labT: 'Total mass of vegetables',
+    introT: (a, T) => 'A vegetable pie contains ' + q11(T, K) + ' of onions and broccoli in the ratio ' + rat11(a) + '.', more: (b, s, d) => 'The pie contains ' + q11(d, K) + ' more ' + X[b] + ' than ' + X[s] + '.',
+    pv: [20, 25, 30, 40, 50, 60, 75, 80], rat: [[5, 3], [3, 2], [4, 3], [5, 2], [2, 3], [3, 4]] }; },
+  club: () => { const X = ['boys', 'girls']; const K = KC11(X, 'children'); return { K, lab: ['Boys', 'Girls'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'There are ' + q11(v, K, k), isT: T => 'There are ' + q11(T, K) + ' altogether',
+    intro: a => 'In a chess club, the ratio of boys to girls is ' + rat11(a) + '.', know: (i, v) => 'There are ' + q11(v, K, i) + ' in the club.',
+    ask: j => 'How many ' + X[j] + ' are in the club?', askT: 'How many children are in the club altogether?', labS: j => 'Number of ' + X[j], labT: 'Children altogether',
+    introT: (a, T) => 'A chess club has ' + q11(T, K) + '. The ratio of boys to girls is ' + rat11(a) + '.', more: (b, s, d) => 'There are ' + d + ' more ' + X[b] + ' than ' + X[s] + '.',
+    pv: [2, 3, 4, 5, 6, 7, 8, 9], rat: [[3, 4], [2, 3], [5, 4], [3, 2], [4, 5], [5, 3], [2, 5]] }; },
+  squash: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_M.concat(NAMES_F)); const X = ['squash', 'water']; const K = KU11('mL'); return { K, lab: ['Squash', 'Water'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'The ' + X[k] + ' is ' + q11(v, K), isT: T => M + ' makes ' + q11(T, K) + ' of drink',
+    intro: a => M + ' makes a drink by mixing orange squash and water in the ratio ' + rat11(a) + '.', know: (i, v) => cap11(he11(M)) + ' uses ' + q11(v, K) + ' of ' + X[i] + '.',
+    ask: j => 'How much ' + X[j] + ' does ' + M + ' use?', askT: 'How much drink does ' + M + ' make?', labS: j => cap11(X[j]), labT: 'Drink altogether',
+    introT: (a, T) => M + ' makes ' + q11(T, K) + ' of drink by mixing orange squash and water in the ratio ' + rat11(a) + '.', more: (b, s, d) => cap11(he11(M)) + ' uses ' + q11(d, K) + ' more ' + X[b] + ' than ' + X[s] + '.',
+    pv: [20, 25, 30, 40, 50, 60], rat: [[1, 4], [1, 5], [2, 5], [1, 6], [2, 7], [1, 3]] }; },
+  mortar: () => { const X = ['sand', 'cement']; const K = KU11('kg'); return { K, lab: ['Sand', 'Cement'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'The ' + X[k] + ' is ' + q11(v, K), isT: T => 'The total mass is ' + q11(T, K),
+    intro: a => 'A builder mixes sand and cement in the ratio ' + rat11(a) + ' to make mortar.', know: (i, v) => 'He uses ' + q11(v, K) + ' of ' + X[i] + '.',
+    ask: j => 'What mass of ' + X[j] + ' does he use?', askT: 'What is the total mass of sand and cement?', labS: j => 'Mass of ' + X[j], labT: 'Total mass',
+    introT: (a, T) => 'A builder makes ' + q11(T, K) + ' of mortar by mixing sand and cement in the ratio ' + rat11(a) + '.', more: (b, s, d) => 'He uses ' + q11(d, K) + ' more ' + X[b] + ' than ' + X[s] + '.',
+    pv: [2, 3, 4, 5, 6, 8, 10, 12], rat: [[3, 1], [4, 1], [5, 1], [5, 2], [7, 2]] }; },
+  stickers: (r, nm) => { const P = nm || twoNames11(r); const K = KC11(['stickers', 'stickers'], 'stickers'); return { K, lab: P,
+    sh: k => P[k] + '’s stickers', is: (k, v) => P[k] + ' gets ' + q11(v, K, k), isT: T => 'They share ' + q11(T, K),
+    intro: a => P[0] + ' and ' + P[1] + ' share a pack of stickers in the ratio ' + rat11(a) + '.', know: (i, v) => P[i] + ' gets ' + q11(v, K, i) + '.',
+    ask: j => 'How many stickers does ' + P[j] + ' get?', askT: 'How many stickers are in the pack?', labS: j => P[j] + ' gets', labT: 'Stickers in the pack',
+    introT: (a, T) => P[0] + ' and ' + P[1] + ' share a pack of ' + q11(T, K) + ' in the ratio ' + rat11(a) + '.', more: (b, s, d) => P[b] + ' gets ' + q11(d, K) + ' more than ' + P[s] + '.',
+    pv: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12], rat: [[3, 5], [4, 7], [2, 7], [5, 6], [7, 4], [6, 5]] }; },
+  paint: (r, nm) => { const F = nm ? nm[0] : r.pick(NAMES_F); const X = ['blue', 'white']; const K = KU11('mL'); return { K, lab: ['Blue', 'White'],
+    sh: k => 'the ' + X[k] + ' paint', is: (k, v) => 'The ' + X[k] + ' paint is ' + q11(v, K), isT: T => F + ' makes ' + q11(T, K) + ' of paint',
+    intro: a => F + ' mixes blue paint and white paint in the ratio ' + rat11(a) + '.', know: (i, v) => cap11(he11(F)) + ' uses ' + q11(v, K) + ' of ' + X[i] + ' paint.',
+    ask: j => 'How much ' + X[j] + ' paint does ' + F + ' use?', askT: 'How much paint does ' + F + ' make altogether?', labS: j => cap11(X[j]) + ' paint', labT: 'Paint altogether',
+    introT: (a, T) => F + ' makes ' + q11(T, K) + ' of paint by mixing blue paint and white paint in the ratio ' + rat11(a) + '.', more: (b, s, d) => cap11(he11(F)) + ' uses ' + q11(d, K) + ' more ' + X[b] + ' paint than ' + X[s] + ' paint.',
+    pv: [25, 30, 40, 50, 60, 75, 80, 100], rat: [[2, 3], [3, 5], [1, 4], [2, 5], [3, 4], [3, 2]] }; }
+};
+const CTX2K = Object.keys(CTX2);
+
+/* the bar picture for a two- or three-share ratio; known: index of the share we are told (or null) */
+const bars11 = (C, a, notes, o) => svgBars(a.map((n, k) => ({ lab: C.lab[k], n, note: notes[k], k: o && o.known === k, hl: o && o.hl && o.hl[k] })), o);
+
+/* the steps shared by every "one share is known" question: draw, then find one part */
+function onePart11(C, a, i, v) {
+  const K = C.K, p = v / a[i];
+  const draw = { en: 'Draw the ratio ' + rat11(a) + ' as boxes that are all the same size: ' + a.map((n, k) => n + ' for ' + C.sh(k)).join(a.length > 2 ? ', ' : ' and ').replace(/, ([^,]*)$/, ' and $1') + '. Every box stands for the same amount.',
+    svg: bars11(C, a, a.map((n, k) => k === i ? qs11(v, K) : '?'), { known: i }) };
+  const one = a[i] === 1 ? { en: C.is(i, v) + ', and that is just 1 box. So one box (one part) is ' + q11(v, K, i) + '.' }
+    : { en: C.is(i, v) + ', and that is ' + a[i] + ' equal boxes. So one box (one part) is ' + q11(v, K, i) + ' ÷ ' + a[i] + '.', tex: tn11(v) + ' \\div ' + a[i] + ' = ' + tn11(p) + ux11(K) };
+  return { p, steps: [draw, one] };
+}
+/* one share of a two-share ratio is known → the other share, the total, or both */
+function rsTwo(C, a, i, v, ask) {
+  const K = C.K, j = 1 - i; const { p, steps } = onePart11(C, a, i, v); const ov = a[j] * p, T = sum11(a) * p;
+  const head = C.intro(a) + ' ' + C.know(i, v);
+  const q = ask === 'other' ? head + ' ' + C.ask(j) : ask === 'total' ? head + ' ' + C.askT : head + ' Work out the two amounts below.';
+  const ans = ask === 'other' ? qa11(ov, K, j) : ask === 'total' ? qa11(T, K) : multi([C.labS(j), qa11(ov, K, j)], [C.labT, qa11(T, K)]);
+  const sol = steps.slice();
+  if (ask !== 'total') sol.push(a[j] === 1 ? { en: 'Now ' + C.sh(j) + ': 1 box. ' + C.is(j, ov) + '.' } : { en: 'Now ' + C.sh(j) + ': ' + a[j] + ' boxes, so multiply one part by ' + a[j] + '. ' + C.is(j, ov) + '.', tex: a[j] + ' \\times ' + tn11(p) + ' = ' + tn11(ov) + ux11(K) });
+  if (ask !== 'other') { sol.push({ en: 'Altogether there are ' + a[0] + ' + ' + a[1] + ' = ' + sum11(a) + ' boxes. ' + C.isT(T) + '.', tex: sum11(a) + ' \\times ' + tn11(p) + ' = ' + tn11(T) + ux11(K) });
+    sol.push({ en: 'Check: the two amounts add up to the same total.', tex: tn11(i === 0 ? v : ov) + ' + ' + tn11(i === 0 ? ov : v) + ' = ' + tn11(T) }); }
+  else if (Number.isInteger(p) && p > 1) sol.push({ en: 'Check: divide both amounts by ' + big(p) + ' and you get the ratio back — ' + big(i === 0 ? v : ov) + ' : ' + big(i === 0 ? ov : v) + ' simplifies to ' + rat11(a) + '.' });
+  sol.push({ en: 'The finished picture: every box is ' + q11(p, K, 0) + '.', svg: bars11(C, a, a.map(n => qs11(n * p, K)), { known: i, part: fx(p) }) });
+  return { q, ans, sol };
+}
+const pick2 = (r, key) => { const C = CTX2[key](r); const a = r.pick(C.rat); return { C, a: r() < 0.5 ? a : a.slice().reverse(), p: r.pick(C.pv) }; };
+
+topic({ id: '11.1a', sec: '11.1', en: 'Sharing in a ratio when you know one share', variants: 3,
+  hints: [
+    'A ratio such as 5 : 2 compares two amounts. It means: for every 5 equal parts of the first amount there are 2 equal parts of the second. Draw it as boxes: 5 boxes in one row, 2 boxes in the other, every box the same size.',
+    'If you know one amount, you know what its boxes are worth together. Tina’s 5 boxes are worth \\$65, so ONE box is $65 ÷ 5 = 13$ dollars. That is the key step: find the value of one part.',
+    'Then count boxes. Kim has 2 boxes: $2 × 13 = 26$, so \\$26. Altogether there are 5 + 2 = 7 boxes: $7 × 13 = 91$, so \\$91.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 2); const { C, a, p } = pick2(r, r.pick(CTX2K)); const i = r.ri(0, 1);
+    return rsTwo(C, a, i, a[i] * p, ['other', 'total', 'both'][vi]);
+  } });
+
+/* ---------- contexts with three shares ---------- */
+const CTX3 = {
+  bill: (r, nm) => { const P = nm || threeNames11(r); const K = KM11; return { K, lab: P,
+    sh: k => P[k] + '’s share', is: (k, v) => P[k] + ' pays ' + usd(v), isT: T => 'The bill is ' + usd(T),
+    intro: a => 'Three friends, ' + P[0] + ', ' + P[1] + ' and ' + P[2] + ', share their water bill in the ratio ' + rat11(a) + '.', know: (i, v) => P[i] + ' pays ' + usd(v) + '.',
+    ask: j => 'How much does ' + P[j] + ' pay?', askT: 'What is the total cost of the bill?', labS: j => P[j] + ' pays', labT: 'Total cost of the bill',
+    pv: [3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20], rat: [[1, 2, 3], [2, 3, 5], [1, 3, 4], [2, 5, 3], [3, 4, 5], [1, 2, 4]] }; },
+  pens: (r) => { const K = KC11(['pens', 'pens', 'pens'], 'pens'); const C = { K, lab: ['Child A', 'Child B', 'Child C'],
+    sh: k => 'child ' + 'ABC'[k], is: (k, v) => 'Child ' + 'ABC'[k] + ' gets ' + q11(v, K, k), isT: T => 'They share ' + q11(T, K),
+    intro: a => 'Three children, A, B and C, share some pens in the ratio ' + rat11(a) + '.', know: (i, v, a) => 'Child ' + 'ABC'[i] + (a && a[i] === Math.max(...a) ? ', the child with the most pens,' : '') + ' gets ' + q11(v, K, i) + '.',
+    ask: j => 'How many pens does child ' + 'ABC'[j] + ' get?', askT: 'How many pens do they share?', labS: j => 'Child ' + 'ABC'[j] + ' gets', labT: 'Pens they share',
+    pv: [2, 3, 4, 5, 6], rat: [[2, 5, 8], [1, 3, 5], [2, 3, 7], [3, 4, 8], [1, 4, 6], [2, 5, 6]] }; return C; },
+  spend: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_M.concat(NAMES_F)); const X = ['food', 'bills', 'travel']; const K = KM11; return { K, lab: ['Food', 'Bills', 'Travel'],
+    sh: k => 'the money for ' + X[k], is: (k, v) => M + ' spends ' + usd(v) + ' on ' + X[k], isT: T => M + ' spends ' + usd(T) + ' altogether',
+    intro: a => 'Each month, ' + M + ' spends money on food, bills and travel in the ratio ' + rat11(a) + '.', know: (i, v) => 'One month ' + he11(M) + ' spends ' + usd(v) + ' on ' + X[i] + '.',
+    ask: j => 'How much does ' + M + ' spend on ' + X[j] + ' that month?', askT: 'How much does ' + M + ' spend altogether on food, bills and travel in this month?', labS: j => 'Spent on ' + X[j], labT: 'Spent altogether',
+    pv: [5, 6, 8, 10, 12, 15, 20, 25], rat: [[4, 7, 5], [3, 5, 2], [5, 6, 3], [4, 9, 3], [3, 8, 4], [5, 7, 2]] }; },
+  paint3: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_M.concat(NAMES_F)); const X = ['blue', 'yellow', 'red']; const K = KU11('mL'); return { K, lab: ['Blue', 'Yellow', 'Red'],
+    sh: k => 'the ' + X[k] + ' paint', is: (k, v) => 'The ' + X[k] + ' paint is ' + q11(v, K), isT: T => M + ' makes ' + q11(T, K) + ' of brown paint',
+    intro: a => M + ' makes some brown paint by mixing blue, yellow and red paint in the ratio ' + rat11(a) + '.', know: (i, v) => cap11(he11(M)) + ' uses ' + q11(v, K) + ' of ' + X[i] + ' paint.',
+    ask: j => 'How much ' + X[j] + ' paint does ' + M + ' use?', askT: 'How much brown paint does ' + M + ' make?', labS: j => cap11(X[j]) + ' paint', labT: 'Brown paint altogether',
+    pv: [10, 20, 25, 30, 40, 50, 60, 75], rat: [[2, 5, 6], [1, 2, 3], [3, 4, 5], [2, 3, 5], [1, 3, 4], [4, 5, 6]] }; },
+  punch: () => { const X = ['orange juice', 'apple juice', 'lemonade']; const K = KU11('mL'); return { K, lab: ['Orange', 'Apple', 'Lemonade'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'There is ' + q11(v, K) + ' of ' + X[k], isT: T => 'There is ' + q11(T, K) + ' of punch',
+    intro: a => 'A fruit punch is made from orange juice, apple juice and lemonade in the ratio ' + rat11(a) + '.', know: (i, v) => 'There is ' + q11(v, K) + ' of ' + X[i] + ' in the punch.',
+    ask: j => 'How much ' + X[j] + ' is in the punch?', askT: 'How much punch is there altogether?', labS: j => cap11(X[j]), labT: 'Punch altogether',
+    pv: [25, 40, 50, 60, 75, 80, 100, 120], rat: [[2, 3, 5], [3, 2, 4], [1, 2, 5], [3, 4, 1], [2, 1, 3], [4, 3, 5]] }; },
+  concrete: () => { const X = ['cement', 'sand', 'gravel']; const K = KU11('kg'); return { K, lab: ['Cement', 'Sand', 'Gravel'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'The ' + X[k] + ' is ' + q11(v, K), isT: T => 'The concrete mix has a mass of ' + q11(T, K),
+    intro: a => 'Concrete is made by mixing cement, sand and gravel in the ratio ' + rat11(a) + '.', know: (i, v) => 'A builder uses ' + q11(v, K) + ' of ' + X[i] + '.',
+    ask: j => 'What mass of ' + X[j] + ' does the builder use?', askT: 'What is the total mass of the concrete mix?', labS: j => 'Mass of ' + X[j], labT: 'Total mass of the mix',
+    pv: [2, 3, 4, 5, 6, 8, 10, 12, 15], rat: [[1, 2, 3], [1, 2, 4], [1, 3, 5], [2, 3, 4], [1, 3, 3]] }; },
+  prize: (r, nm) => { const P = nm || threeNames11(r); const K = KM11; return { K, lab: P,
+    sh: k => P[k] + '’s share', is: (k, v) => P[k] + ' gets ' + usd(v), isT: T => 'The prize is ' + usd(T),
+    intro: a => P[0] + ', ' + P[1] + ' and ' + P[2] + ' share a prize in the ratio ' + rat11(a) + '.', know: (i, v) => P[i] + ' gets ' + usd(v) + '.',
+    ask: j => 'How much does ' + P[j] + ' get?', askT: 'How much is the prize altogether?', labS: j => P[j] + ' gets', labT: 'The whole prize',
+    pv: [5, 6, 8, 10, 12, 15, 20, 25, 30, 40], rat: [[2, 3, 5], [3, 4, 5], [1, 2, 7], [5, 3, 2], [4, 5, 6], [1, 4, 5]] }; },
+  trail: () => { const X = ['nuts', 'raisins', 'seeds']; const K = KU11('g'); return { K, lab: ['Nuts', 'Raisins', 'Seeds'],
+    sh: k => 'the ' + X[k], is: (k, v) => 'The ' + X[k] + ' are ' + q11(v, K), isT: T => 'The bag holds ' + q11(T, K) + ' of trail mix',
+    intro: a => 'A trail mix contains nuts, raisins and seeds in the ratio ' + rat11(a) + '.', know: (i, v) => 'A bag of trail mix contains ' + q11(v, K) + ' of ' + X[i] + '.',
+    ask: j => 'What mass of ' + X[j] + ' does the bag contain?', askT: 'What is the total mass of trail mix in the bag?', labS: j => 'Mass of ' + X[j], labT: 'Total mass in the bag',
+    pv: [10, 15, 20, 25, 30, 40, 50], rat: [[4, 3, 1], [5, 3, 2], [3, 2, 1], [6, 3, 1], [4, 5, 1]] }; }
+};
+const CTX3K = Object.keys(CTX3);
+
+/* one share of a three-share ratio is known → the others and/or the total */
+function rsThree(C, a, i, v, ask, j1) {
+  const K = C.K, others = [0, 1, 2].filter(k => k !== i); const { p, steps } = onePart11(C, a, i, v); const val = a.map(n => n * p), T = sum11(a) * p;
+  const head = C.intro(a) + ' ' + C.know(i, v, a);
+  const jj = ask === 'one' ? (j1 != null ? j1 : others[0]) : null;
+  const q = ask === 'one' ? head + ' ' + C.ask(jj) : ask === 'total' ? head + ' ' + C.askT : ask === 'others' ? head + ' Work out the other two shares.' : head + ' Work out the other two shares and the total.';
+  const ans = ask === 'one' ? qa11(val[jj], K, jj) : ask === 'total' ? qa11(T, K) : ask === 'others' ? multi(...others.map(k => [C.labS(k), qa11(val[k], K, k)])) : multi(...others.map(k => [C.labS(k), qa11(val[k], K, k)]), [C.labT, qa11(T, K)]);
+  const sol = steps.slice();
+  (ask === 'one' ? [jj] : ask === 'total' ? [] : others).forEach(k => sol.push(a[k] === 1 ? { en: cap11(C.sh(k)) + ': 1 box. ' + C.is(k, val[k]) + '.' } : { en: cap11(C.sh(k)) + ': ' + a[k] + ' boxes. ' + C.is(k, val[k]) + '.', tex: a[k] + ' \\times ' + tn11(p) + ' = ' + tn11(val[k]) + ux11(K) }));
+  if (ask === 'total' || ask === 'all') sol.push({ en: 'Altogether there are ' + a.join(' + ') + ' = ' + sum11(a) + ' boxes. ' + C.isT(T) + '.', tex: sum11(a) + ' \\times ' + tn11(p) + ' = ' + tn11(T) + ux11(K) });
+  if (ask === 'all') sol.push({ en: 'Check: the three shares add up to the total.', tex: val.map(tn11).join(' + ') + ' = ' + tn11(T) });
+  sol.push({ en: 'The finished picture: every box is ' + q11(p, K, 0) + '.', svg: bars11(C, a, val.map(x => qs11(x, K)), { known: i, part: fx(p) }) });
+  return { q, ans, sol };
+}
+/* Rohan's homework: a worked answer with one or two mistakes to find, then the correct total */
+function rsMistake(C, a, i, v, who, err) {
+  const K = C.K, alt = a[0] !== a[i] ? a[0] : a[1], wrongPart = err !== 'sum' ? alt : a[i], S = sum11(a), wrongS = err !== 'share' ? S - 1 : S;
+  const p0 = v / wrongPart, T0 = wrongS * p0, p = v / a[i], T = S * p;
+  const m = n => K.u === '$' ? '$' + big(n) : q11(n, K);
+  const hw = '<div class="hw"><p class="hwh">Question</p><p>' + esx11(C.intro(a) + ' ' + C.know(i, v) + ' ' + C.askT).replace(/\\\$/g, '$') + '</p><p class="hwh">Answer</p><p>' + wrongPart + ' parts = ' + m(v) + ', so 1 part = ' + big(v) + ' ÷ ' + wrongPart + ' = ' + m(p0) + '</p><p>total number of parts = ' + a.join(' + ') + ' = ' + wrongS + '</p><p>total = ' + wrongS + ' × ' + big(p0) + ' = ' + m(T0) + '</p></div>';
+  const X = C.lab[i].toLowerCase(), He = cap11(he11(who));
+  const oShare = He + ' used ' + alt + ' parts for ' + X + ', but ' + X + ' is ' + a[i] + ' parts of the ratio. The rest of his method is right.';
+  const oSum = He + ' added the parts wrongly: ' + a.join(' + ') + ' = ' + S + ', not ' + (S - 1) + '. The rest of his method is right.';
+  const oBoth = He + ' used ' + alt + ' parts for ' + X + ' (it is ' + a[i] + ' parts), and ' + he11(who) + ' added the parts wrongly (' + a.join(' + ') + ' = ' + S + ').';
+  const opts = [err === 'both' ? oBoth : err === 'share' ? oShare : oSum].concat(err === 'both' ? [oShare, oSum] : err === 'share' ? [oBoth, oSum] : [oBoth, oShare], ['There is no mistake in his working.']);
+  const sol = [];
+  if (err !== 'sum') sol.push({ en: 'Mistake: in the ratio ' + rat11(a) + ' the ' + ['first', 'second', 'third'][i] + ' number is for ' + X + ', so the ' + q11(v, K) + ' is ' + a[i] + ' parts, not ' + wrongPart + '.' });
+  if (err !== 'share') sol.push({ en: 'Mistake: the number of parts is ' + a.join(' + ') + ' = ' + S + ', not ' + (S - 1) + '.' });
+  const { steps } = onePart11(C, a, i, v); steps.forEach(s => sol.push(s));
+  sol.push({ en: 'Altogether there are ' + S + ' parts. ' + C.isT(T) + '.', tex: S + ' \\times ' + tn11(p) + ' = ' + tn11(T) + ux11(K) });
+  return { q: 'This is part of ' + who + '’s homework. Find the mistake, then work out the correct answer.', html: hw, ans: multi(['What did ' + who + ' do wrong?', MQ(mkRng(a[0] * 977 + a[1] * 131 + a[2] * 17 + v + (err === 'sum' ? 1 : err === 'share' ? 2 : 3)), opts, 0)], ['The correct total', qa11(T, K)]), sol };
+}
+const pick3 = (r, key) => { const C = CTX3[key](r); const a = r.sh(r.pick(C.rat)); return { C, a, p: r.pick(C.pv) }; };
+
+topic({ id: '11.1b', sec: '11.1', en: 'Ratios with three shares', variants: 4,
+  hints: [
+    'A ratio can have three parts. In 1 : 2 : 3 the first share is 1 part, the second 2 parts and the third 3 parts — all the parts the same size. Draw three rows of boxes.',
+    'Find which share you are told about and how many boxes it has. Benji pays \\$24 and has 2 boxes in 1 : 2 : 3, so one box is $24 ÷ 2 = 12$ dollars.',
+    'Multiply one part by the number of boxes you need: Caen has 3 boxes, $3 × 12 = 36$. For the total add the numbers in the ratio first: 1 + 2 + 3 = 6 parts, $6 × 12 = 72$.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    if (vi === 3) { const C = CTX3.spend(r); const a = r.sh(r.pick(C.rat)); const i = r.pick([1, 2].filter(k => a[k] !== a[0])); const p = r.pick([5, 6, 8, 10, 12, 15]); return rsMistake(C, a, i, a[i] * p, r.pick(['Rohan', 'Arun', 'Marcus', 'Zara', 'Mari', 'Leo']), r.pick(['both', 'both', 'share', 'sum'])); }
+    const { C, a, p } = pick3(r, r.pick(CTX3K)); const i = r.ri(0, 2);
+    if (vi === 2) return rsThree(C, a, i, a[i] * p, 'one', r.pick([0, 1, 2].filter(k => k !== i)));
+    return rsThree(C, a, i, a[i] * p, vi === 0 ? 'others' : 'total');
+  } });
+
+/* ---------- 11.1c the difference or the total is known ---------- */
+function rsDiff(C, a, mode, v, ask) {
+  const K = C.K, S = sum11(a), b = a[1] > a[0] ? 1 : 0, s = 1 - b, dn = a[b] - a[s];
+  const p = mode === 'diff' ? v / dn : v / S; const val = a.map(n => n * p), T = S * p, d = dn * p;
+  const head = mode === 'diff' ? C.intro(a) + ' ' + C.more(b, s, v) : C.introT(a, v);
+  const q = ask === 'total' ? head + ' ' + C.askT : ask === 'one' ? head + ' ' + C.ask(b) : ask === 'each' ? head + ' Work out both shares.' : head + ' Work out the total and both shares.';
+  const ans = ask === 'total' ? qa11(T, K) : ask === 'one' ? qa11(val[b], K, b) : ask === 'each' ? multi([C.labS(0), qa11(val[0], K, 0)], [C.labS(1), qa11(val[1], K, 1)]) : multi([C.labT, qa11(T, K)], [C.labS(0), qa11(val[0], K, 0)], [C.labS(1), qa11(val[1], K, 1)]);
+  const hl = [[], []]; for (let k = a[s]; k < a[b]; k++) hl[b].push(k);
+  const sol = [];
+  if (mode === 'diff') {
+    sol.push({ en: 'Draw the ratio ' + rat11(a) + ' as equal boxes: ' + a[b] + ' for ' + C.sh(b) + ' and ' + a[s] + ' for ' + C.sh(s) + '. The difference is ' + a[b] + ' − ' + a[s] + ' = ' + pl(dn, 'box', 'boxes') + ' (shaded). The difference, ' + q11(v, K, b) + ', is exactly ' + (dn === 1 ? 'that box' : 'those ' + dn + ' boxes') + '.',
+      svg: bars11(C, a, ['?', '?'], { hl, foot: 'the shaded ' + (dn === 1 ? 'box' : 'boxes') + ' = ' + qs11(v, K) }) });
+    sol.push(dn === 1 ? { en: 'So one box (one part) is ' + q11(v, K, b) + '.' } : { en: 'So one box (one part) is ' + q11(v, K, b) + ' ÷ ' + dn + '.', tex: tn11(v) + ' \\div ' + dn + ' = ' + tn11(p) + ux11(K) });
+  } else {
+    sol.push({ en: 'Draw the ratio ' + rat11(a) + ' as equal boxes: ' + a[0] + ' + ' + a[1] + ' = ' + S + ' boxes in all. The whole amount, ' + q11(v, K) + ', is shared out between these ' + S + ' boxes.', svg: bars11(C, a, ['?', '?'], { foot: 'all ' + S + ' boxes = ' + qs11(v, K) }) });
+    sol.push({ en: 'So one box (one part) is ' + q11(v, K) + ' ÷ ' + S + '.', tex: tn11(v) + ' \\div ' + S + ' = ' + tn11(p) + ux11(K) });
+  }
+  if (ask === 'total' || ask === 'all') sol.push({ en: 'Altogether there are ' + S + ' boxes. ' + C.isT(T) + '.', tex: S + ' \\times ' + tn11(p) + ' = ' + tn11(T) + ux11(K) });
+  if (ask !== 'total') (ask === 'one' ? [b] : [0, 1]).forEach(k => sol.push(a[k] === 1 ? { en: cap11(C.sh(k)) + ': 1 box. ' + C.is(k, val[k]) + '.' } : { en: cap11(C.sh(k)) + ': ' + a[k] + ' boxes. ' + C.is(k, val[k]) + '.', tex: a[k] + ' \\times ' + tn11(p) + ' = ' + tn11(val[k]) + ux11(K) }));
+  sol.push(mode === 'diff' ? { en: 'Check: the difference between the shares is right.', tex: tn11(val[b]) + ' - ' + tn11(val[s]) + ' = ' + tn11(d) } : { en: 'Check: the shares add up to the whole amount.', tex: tn11(val[0]) + ' + ' + tn11(val[1]) + ' = ' + tn11(T) });
+  return { q, ans, sol };
+}
+topic({ id: '11.1c', sec: '11.1', en: 'Using the difference or the total', variants: 4,
+  hints: [
+    'Draw the ratio as boxes first. In 4 : 5 one person has 4 boxes and the other has 5, so the second person has 1 box more. If you are told that the difference is \\$15, then that 1 extra box is worth \\$15.',
+    'If you are told the TOTAL instead, add the numbers in the ratio: 4 : 5 has 4 + 5 = 9 boxes, and the total is shared between all 9 of them. \\$135 shared into 9 boxes: $135 ÷ 9 = 15$ dollars a box.',
+    'Once you know one box, every share is just “boxes × one part”: 4 boxes are $4 × 15 = 60$, 5 boxes are $5 × 15 = 75$. Check: 75 − 60 = 15 and 60 + 75 = 135.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    for (let g = 0; g < 50; g++) { const key = r.pick(CTX2K); const { C, a, p } = pick2(r, key); if (a[0] === a[1]) continue;
+      if (vi <= 1) { const dn = Math.abs(a[1] - a[0]); return rsDiff(C, a, 'diff', dn * p, vi === 0 ? 'total' : 'each'); }
+      return rsDiff(C, a, 'total', sum11(a) * p, vi === 2 ? 'each' : 'one'); }
+    throw new Error('11.1c');
+  } });
+
+/* ---------- 11.1d which share is the number we know? two possible answers ---------- */
+function rsTwoWays(a, v, ctx, ask, who, wrong) {
+  const o1 = v / a[0] * a[1], o2 = v / a[1] * a[0];
+  const C = ctx === 'num' ? { lab: ['First', 'Second'], what: 'number', nm: ['the first number', 'the second number'], be: 'is', askV: 'Work out the two possible values for the other number.' } : ctx;
+  const q0 = ctx === 'num' ? 'Two numbers are in the ratio ' + rat11(a) + '. One of the numbers is ' + big(v) + '.' : C.intro(a, v);
+  const sol = [
+    { en: 'You are not told WHICH of the two ' + C.what + 's is ' + big(v) + ', so there are two cases. Draw both.' },
+    { en: 'Case 1: ' + big(v) + ' ' + C.be + ' ' + C.nm[0] + ' — the ' + a[0] + ' boxes. One box is ' + big(v) + ' ÷ ' + a[0] + ', and the other ' + C.what + ' is ' + a[1] + ' boxes.', svg: svgBars([{ lab: C.lab[0], n: a[0], note: big(v), k: true }, { lab: C.lab[1], n: a[1], note: big(o1) }], { part: fx(v / a[0]) }), tex: tn11(v) + ' \\div ' + a[0] + ' \\times ' + a[1] + ' = ' + tn11(o1) },
+    { en: 'Case 2: ' + big(v) + ' ' + C.be + ' ' + C.nm[1] + ' — the ' + a[1] + ' boxes. One box is ' + big(v) + ' ÷ ' + a[1] + ', and the other ' + C.what + ' is ' + a[0] + ' boxes.', svg: svgBars([{ lab: C.lab[0], n: a[0], note: big(o2) }, { lab: C.lab[1], n: a[1], note: big(v), k: true }], { part: fx(v / a[1]) }), tex: tn11(v) + ' \\div ' + a[1] + ' \\times ' + a[0] + ' = ' + tn11(o2) },
+    { en: 'So the other ' + C.what + ' is ' + big(o1) + ' or ' + big(o2) + '. Both fit the ratio: ' + big(v) + ' : ' + big(o1) + ' and ' + big(o2) + ' : ' + big(v) + ' both simplify to ' + rat11(a) + '.' }];
+  if (ask === 'list') return { q: q0 + ' ' + C.askV, ans: { k: 'list', key: fx(o1) + ',' + fx(o2), help: L('Both values, separated by a comma, like <code>16, 9</code>') }, sol };
+  const right = 'No. ' + big(wrong) + ' is possible, but so is ' + big(wrong === o1 ? o2 : o1) + ': ' + big(v) + ' could be either ' + C.what + ' in the ratio.';
+  return { q: q0 + ' ' + who + ' says, “The other ' + C.what + ' must be ' + big(wrong) + '.” Is ' + who + ' right?',
+    ans: MQ(mkRng(v * 31 + a[0] * 7 + a[1]), [right, 'Yes. ' + big(wrong) + ' is the only possible value.', 'No. The other ' + C.what + ' must be ' + big(wrong === o1 ? o2 : o1) + '.', 'No. The other ' + C.what + ' is also ' + big(v) + '.'], 0), sol };
+}
+const CTXW = [
+  () => ({ lab: ['Cats', 'Dogs'], what: 'group', nm: ['the cats', 'the dogs'], be: 'are', askV: 'Work out the two possible numbers of animals in the other group.', intro: (a, v) => 'At an animal shelter the ratio of cats to dogs is ' + rat11(a) + '. One of the two groups has ' + big(v) + ' animals.' }),
+  () => ({ lab: ['Red', 'Blue'], what: 'colour', nm: ['the red beads', 'the blue beads'], be: 'are', askV: 'Work out the two possible numbers of beads of the other colour.', intro: (a, v) => 'A bag holds red and blue beads in the ratio ' + rat11(a) + '. There are ' + big(v) + ' beads of one of the colours.' }),
+  () => ({ lab: ['Adults', 'Children'], what: 'group', nm: ['the adults', 'the children'], be: 'are', askV: 'Work out the two possible numbers of people in the other group.', intro: (a, v) => 'On a school trip the ratio of adults to children is ' + rat11(a) + '. One of the two groups has ' + big(v) + ' people.' })
+];
+topic({ id: '11.1d', sec: '11.1', en: 'Two possible answers: which share do you know?', variants: 3,
+  hints: [
+    'Read carefully: “one of the numbers is 12” does not say WHICH one. In the ratio 3 : 4 the 12 could be the 3 boxes or the 4 boxes, so you must try both.',
+    'If 12 is the 3 boxes, one box is $12 ÷ 3 = 4$ and the other number is $4 × 4 = 16$. If 12 is the 4 boxes, one box is $12 ÷ 4 = 3$ and the other number is $3 × 3 = 9$.',
+    'Check each answer by simplifying: 12 : 16 = 3 : 4 and 9 : 12 = 3 : 4. Both are right, so the answer has two values.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 2);
+    for (let g = 0; g < 80; g++) { const a = r.pick([[3, 4], [2, 3], [2, 5], [3, 5], [4, 5], [5, 6], [3, 7], [4, 7], [5, 7], [5, 8]]); const k = r.pick([1, 1, 2, 2, 3]); const v = a[0] * a[1] * k; if (v > 160) continue;
+      const A = r() < 0.5 ? a : [a[1], a[0]];
+      if (vi === 0) return rsTwoWays(A, v, 'num', 'list');
+      if (vi === 1) return rsTwoWays(A, v, r.pick(CTXW)(), 'list');
+      const o1 = v / A[0] * A[1], o2 = v / A[1] * A[0]; return rsTwoWays(A, v, 'num', 'claim', r.pick(NAMES_F.concat(NAMES_M)), r.pick([o1, o2])); }
+    throw new Error('11.1d');
+  } });
+
+/* ---------- 11.1e the most you can make: the ingredient that runs out first decides ---------- */
+/* C: { lab, X (names in sentences), K, intro(a, lim), askEach, askT, labS(k) }; lim: amounts we have (null = plenty) */
+function rsLimit(C, a, lim, ask) {
+  const K = C.K; const ks = a.map((n, k) => k).filter(k => lim[k] != null); const per = ks.map(k => lim[k] / a[k]); const p = Math.min(...per); const kb = ks[per.indexOf(p)];
+  const val = a.map(n => n * p), T = sum11(a) * p;
+  const q = C.intro(a, lim) + ' ' + (ask === 'total' ? C.askT : C.askEach);
+  const ans = ask === 'total' ? qa11(T, K) : multi(...a.map((n, k) => [C.labS(k), qa11(val[k], K)]));
+  const sol = [{ en: 'One part of the ratio cannot be as big as you like: each ingredient you are short of sets a limit. Divide what you have by its number in the ratio.' }];
+  ks.forEach((k, t) => sol.push({ en: cap11(C.X[k]) + ': ' + q11(lim[k], K) + ' is enough for parts of at most ' + q11(lim[k], K) + ' ÷ ' + a[k] + '.', tex: tn11(lim[k]) + ' \\div ' + a[k] + ' = ' + tn11(per[t]) + ux11(K) }));
+  sol.push({ en: 'One part can be at most ' + q11(p, K) + ' — any bigger and there would not be enough ' + C.X[kb] + '. So one part is ' + q11(p, K) + '.' });
+  if (ask === 'total') sol.push({ en: 'Altogether there are ' + a.join(' + ') + ' = ' + sum11(a) + ' parts.', tex: sum11(a) + ' \\times ' + tn11(p) + ' = ' + tn11(T) + ux11(K) });
+  else a.forEach((n, k) => sol.push(n === 1 ? { en: cap11(C.X[k]) + ': 1 part, ' + q11(p, K) + '.' } : { en: cap11(C.X[k]) + ': ' + n + ' parts' + (lim[k] != null ? (k === kb ? ' — all of it.' : ' — ' + q11(lim[k] - val[k], K) + ' is left over.') : '.'), tex: n + ' \\times ' + tn11(p) + ' = ' + tn11(val[k]) + ux11(K) }));
+  sol.push({ en: 'The bar model with one part = ' + q11(p, K) + ':', svg: svgBars(a.map((n, k) => ({ lab: C.lab[k], n, note: qs11(val[k], K), k: k === kb })), { part: fx(p) }) });
+  return { q, ans, sol };
+}
+const CTXL = {
+  iced: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_F.concat(NAMES_M)); const X = ['vanilla ice cream', 'grape juice', 'ginger ale']; return { K: KU11('mL'), lab: ['Ice cream', 'Grape', 'Ginger ale'], X,
+    intro: (a, lim) => M + ' makes a cold iced drink. ' + cap11(he11(M)) + ' uses vanilla ice cream, grape juice and ginger ale in the ratio ' + rat11(a) + '. ' + M + ' has plenty of vanilla ice cream, but only ' + q11(lim[1], KU11('mL')) + ' of grape juice and ' + q11(lim[2], KU11('mL')) + ' of ginger ale. ' + cap11(he11(M)) + ' makes as much iced drink as ' + he11(M) + ' can with these ingredients.',
+    askEach: 'How much of each ingredient does ' + he11(M) + ' use?', askT: 'How much iced drink does ' + he11(M) + ' make?', labS: k => cap11(X[k]), free: 0, rat: [[1, 4, 5], [1, 3, 4], [2, 5, 6], [1, 2, 3], [1, 5, 4]] }; },
+  punch: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_M); const X = ['lemonade', 'orange juice', 'apple juice']; return { K: KU11('mL'), lab: ['Lemonade', 'Orange', 'Apple'], X,
+    intro: (a, lim) => M + ' makes fruit punch from lemonade, orange juice and apple juice in the ratio ' + rat11(a) + '. ' + cap11(he11(M)) + ' has plenty of lemonade, but only ' + q11(lim[1], KU11('mL')) + ' of orange juice and ' + q11(lim[2], KU11('mL')) + ' of apple juice. ' + cap11(he11(M)) + ' makes as much punch as ' + he11(M) + ' can.',
+    askEach: 'How much of each drink does ' + he11(M) + ' use?', askT: 'How much punch does ' + he11(M) + ' make?', labS: k => cap11(X[k]), free: 0, rat: [[2, 3, 4], [3, 2, 5], [1, 2, 2], [4, 3, 5], [2, 5, 3]] }; },
+  paint: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_F); const X = ['white paint', 'red paint', 'yellow paint']; return { K: KU11('mL'), lab: ['White', 'Red', 'Yellow'], X,
+    intro: (a, lim) => M + ' mixes white, red and yellow paint in the ratio ' + rat11(a) + ' to make a shade of orange. ' + cap11(he11(M)) + ' has plenty of white paint, but only ' + q11(lim[1], KU11('mL')) + ' of red paint and ' + q11(lim[2], KU11('mL')) + ' of yellow paint. ' + cap11(he11(M)) + ' makes as much orange paint as ' + he11(M) + ' can.',
+    askEach: 'How much of each colour does ' + he11(M) + ' use?', askT: 'How much orange paint does ' + he11(M) + ' make?', labS: k => cap11(X[k]), free: 0, rat: [[1, 2, 3], [2, 3, 5], [1, 4, 3], [3, 2, 4], [1, 3, 2]] }; },
+  two: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_M.concat(NAMES_F)); const t = r.pick([['red paint', 'yellow paint', 'orange paint', 'Red', 'Yellow', 'mL'], ['flour', 'sugar', 'biscuit mix', 'Flour', 'Sugar', 'g'], ['sand', 'cement', 'mortar', 'Sand', 'Cement', 'kg']]);
+    return { K: KU11(t[5]), lab: [t[3], t[4]], X: [t[0], t[1]], intro: (a, lim) => M + ' makes ' + t[2] + ' by mixing ' + t[0] + ' and ' + t[1] + ' in the ratio ' + rat11(a) + '. ' + cap11(he11(M)) + ' has ' + q11(lim[0], KU11(t[5])) + ' of ' + t[0] + ' and ' + q11(lim[1], KU11(t[5])) + ' of ' + t[1] + '.',
+      askEach: 'How much of each does ' + he11(M) + ' use to make as much ' + t[2] + ' as possible?', askT: 'What is the largest amount of ' + t[2] + ' ' + he11(M) + ' can make?', labS: k => cap11(t[k]), free: null, rat: t[5] === 'kg' ? [[3, 1], [4, 1], [5, 2]] : [[2, 3], [3, 2], [3, 4], [5, 3], [2, 5]] }; }
+};
+function genLimit(r, key, ask) {
+  for (let g = 0; g < 200; g++) { const C = CTXL[key](r); const a = r.pick(C.rat);
+    const p = C.K.u === 'kg' ? r.pick([2, 3, 4, 5, 6, 8, 10]) : r.pick([50, 60, 75, 80, 100, 120, 125, 150, 200, 250, 300, 400, 450, 500, 550]);
+    const lim = a.map(() => null); const ks = a.map((n, k) => k).filter(k => k !== C.free); const kb = r.pick(ks);
+    ks.forEach(k => { lim[k] = k === kb ? a[k] * p : a[k] * p + (C.K.u === 'kg' ? r.pick([1, 2, 3, 5]) : r.pick([25, 50, 100, 150, 200, 250])); });
+    if (ks.some(k => k !== kb && !Number.isInteger(lim[k] / a[k] * 10))) continue;
+    return rsLimit(C, a, lim, ask); }
+  throw new Error('11.1e');
+}
+topic({ id: '11.1e', sec: '11.1', en: 'The most you can make', variants: 3,
+  hints: [
+    'When you mix things in a ratio and you are short of some of them, the one that runs out first decides how much you can make.',
+    'Work out how big one part could be for each ingredient you are short of: ingredient you have ÷ its number in the ratio. With 2250 mL of grape juice at 4 parts, one part could be $2250 ÷ 4 = 562.5$ mL; with 2750 mL of ginger ale at 5 parts, only $2750 ÷ 5 = 550$ mL.',
+    'Take the SMALLER of these: one part = 550 mL, or the ginger ale would run out. Then every amount is “number in the ratio × 550”.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 2);
+    if (vi === 0) return genLimit(r, r.pick(['iced', 'punch', 'paint']), 'each');
+    if (vi === 1) return genLimit(r, 'two', 'total');
+    return genLimit(r, r.pick(['iced', 'punch', 'paint']), 'total');
+  } });
+
+/* =====================================================================================================================
+   11.2 DIRECT AND INVERSE PROPORTION
+   ===================================================================================================================== */
+/* a table of lines with the same change on both sides (the workbook's arrows): rows [[left, right], …], ops [[left op, right op], …] */
+function arrN(rows, ops) {
+  let s = '\\begin{array}{rcl}';
+  rows.forEach((rw, k) => { if (k) s += ' \\\\ {\\scriptstyle ' + ops[k - 1][0] + '}\\,\\Big\\downarrow\\; & & \\;\\Big\\downarrow\\,{\\scriptstyle ' + ops[k - 1][1] + '} \\\\ '; s += rw[0] + ' & \\longrightarrow & ' + rw[1]; });
+  return s + '\\end{array}';
+}
+const mx11 = v => '\\$' + (Number.isInteger(v) ? String(v) : v.toFixed(2));        /* money inside TeX pictures (not in arithmetic) */
+const nOf = (n, one, many) => n === 1 ? 'one ' + one : big(n) + ' ' + many;
+
+/* ---------- direct proportion contexts: x → y, y = rate × x ---------- */
+const CTXD = {
+  typing: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_M.concat(NAMES_F)); const h = he11(M); return { M, xu: ['minute', 'minutes'], yu: 'words', money: false, rates: [30, 35, 40, 45, 50, 60], n1s: [1],
+    intro: (n1, y1) => M + ' types ' + big(y1) + ' words in ' + nOf(n1, 'minute', 'minutes') + '.', ask: n => 'How many words does ' + h + ' type in ' + pl(n, 'minute', 'minutes') + '?', lab: n => 'In ' + pl(n, 'minute', 'minutes'),
+    askX: y => 'How many minutes does it take ' + (h === 'she' ? 'her' : 'him') + ' to type ' + big(y) + ' words?', rel: 'the number of minutes ' + M + ' types and the number of words ' + h + ' types' }; },
+  peanuts: () => ({ xu: ['bag', 'bags'], yu: '$', money: true, rates: [1.2, 1.5, 1.8, 2.2, 2.4, 2.5, 3.2], n1s: [1],
+    intro: (n1, y1) => (n1 === 1 ? 'One bag of peanuts costs ' : n1 + ' bags of peanuts cost ') + usd(y1) + '.', ask: n => 'What is the total cost of ' + pl(n, 'bag', 'bags') + '?', lab: n => pl(n, 'bag', 'bags'),
+    askX: y => 'How many bags can you buy with ' + usd(y) + '?', rel: 'the number of bags of peanuts and the total cost' }),
+  printer: () => ({ xu: ['minute', 'minutes'], yu: 'pages', money: false, rates: [12, 15, 16, 18, 20, 24, 25], n1s: [1],
+    intro: (n1, y1) => 'A printer prints ' + big(y1) + ' pages in ' + nOf(n1, 'minute', 'minutes') + '.', ask: n => 'How many pages does it print in ' + pl(n, 'minute', 'minutes') + '?', lab: n => 'In ' + pl(n, 'minute', 'minutes'),
+    askX: y => 'How many minutes does it take to print ' + big(y) + ' pages?', rel: 'the printing time and the number of pages printed' }),
+  notebooks: () => ({ xu: ['notebook', 'notebooks'], yu: '$', money: true, rates: [0.8, 1.2, 1.5, 1.7, 2.4, 3.5], n1s: [3, 4, 5, 6],
+    intro: (n1, y1) => n1 + ' notebooks cost ' + usd(y1) + '.', ask: n => 'How much do ' + pl(n, 'notebook', 'notebooks') + ' cost?', lab: n => pl(n, 'notebook', 'notebooks'),
+    askX: y => 'How many notebooks can you buy for ' + usd(y) + '?', rel: 'the number of notebooks and their total cost' }),
+  wages: (r, nm) => { const M = nm ? nm[0] : r.pick(NAMES_F.concat(NAMES_M)); const h = he11(M); return { M, xu: ['hour', 'hours'], yu: '$', money: true, rates: [8, 9, 12, 15, 18, 20], n1s: [3, 4, 5, 6],
+    intro: (n1, y1) => M + ' is paid by the hour. ' + cap11(h) + ' earns ' + usd(y1) + ' for ' + pl(n1, 'hour', 'hours') + ' of work.', ask: n => 'How much does ' + h + ' earn for ' + pl(n, 'hour', 'hours') + '?', lab: n => 'For ' + pl(n, 'hour', 'hours'),
+    askX: y => 'How many hours must ' + h + ' work to earn ' + usd(y) + '?', rel: 'the number of hours ' + M + ' works and the money ' + h + ' earns' }; },
+  ribbon: () => ({ xu: ['metre', 'metres'], yu: '$', money: true, rates: [0.6, 0.9, 1.2, 1.5, 2.5, 3.5], n1s: [2, 3, 4, 5],
+    intro: (n1, y1) => n1 + ' metres of ribbon cost ' + usd(y1) + '.', ask: n => 'How much do ' + pl(n, 'metre', 'metres') + ' of the same ribbon cost?', lab: n => pl(n, 'metre', 'metres'),
+    askX: y => 'How many metres of ribbon can you buy for ' + usd(y) + '?', rel: 'the length of ribbon and its cost' }),
+  fuel: () => ({ xu: ['litre', 'litres'], yu: 'km', money: false, rates: [12, 14, 15, 16, 18], n1s: [5, 8, 10, 20],
+    intro: (n1, y1) => 'A car travels ' + big(y1) + ' km on ' + n1 + ' litres of petrol.', ask: n => 'How far does it travel on ' + pl(n, 'litre', 'litres') + ' of petrol?', lab: n => 'On ' + pl(n, 'litre', 'litres'),
+    askX: y => 'How many litres of petrol does it need to travel ' + big(y) + ' km?', rel: 'the amount of petrol used and the distance travelled' })
+};
+const CTXDK = Object.keys(CTXD);
+const dY = (C, v) => C.money ? usd(v) : big(v) + ' ' + C.yu;                           /* the y amount in words */
+const dYt = (C, v) => C.money ? mx11(v) : tx11(v, C.yu);                                /* … and in a TeX picture */
+const dXt = (C, n) => tx11(n, n === 1 ? C.xu[0] : C.xu[1]);
+const dA = (C, v) => C.money ? N(money2(v), { pre: '$' }) : N(fx(v), { unit: C.yu });
+const dV = v => +v.toFixed(6);
+/* x1 → y1 is known; the steps to y for x2 (through 1 unit when x1 is not 1) */
+function dpSteps(C, x1, y1, x2) {
+  const rate = dV(y1 / x1), y2 = dV(rate * x2); const st = []; const tn11 = v => C.money && !Number.isInteger(v) ? v.toFixed(2) : fx(v);
+  if (x1 === 1) { st.push({ en: 'Multiply both amounts by ' + x2 + ':', tex: arrN([[dXt(C, 1), dYt(C, y1)], [dXt(C, x2), dYt(C, y2)]], [['\\times ' + x2, '\\times ' + x2]]) }); st.push({ en: '', tex: tn11(y1) + ' \\times ' + x2 + ' = ' + tn11(y2) }); }
+  else if (x2 % x1 === 0) { const m = x2 / x1; st.push({ en: x2 + ' is ' + m + ' times ' + x1 + ', so multiply both amounts by ' + m + ':', tex: arrN([[dXt(C, x1), dYt(C, y1)], [dXt(C, x2), dYt(C, y2)]], [['\\times ' + m, '\\times ' + m]]) }); st.push({ en: '', tex: tn11(y1) + ' \\times ' + m + ' = ' + tn11(y2) }); }
+  else { st.push({ en: 'Go through ONE ' + C.xu[0] + ' first: divide both amounts by ' + x1 + ', then multiply both by ' + x2 + '.', tex: arrN([[dXt(C, x1), dYt(C, y1)], [dXt(C, 1), dYt(C, rate)], [dXt(C, x2), dYt(C, y2)]], [['\\div ' + x1, '\\div ' + x1], ['\\times ' + x2, '\\times ' + x2]]) });
+    st.push({ en: '', tex: tn11(y1) + ' \\div ' + x1 + ' = ' + tn11(rate) }); st.push({ en: '', tex: tn11(rate) + ' \\times ' + x2 + ' = ' + tn11(y2) }); }
+  return { y2, st };
+}
+const DP_WHY = 'These amounts are in direct proportion: when one is multiplied by a number, the other is multiplied by the same number.';
+/* direct proportion: several x values to fill in (the workbook’s i, ii, iii), optionally with the “direct or inverse?” question */
+function dpRate(C, x1, y1, xs, kind) {
+  const R = xs.map(x => dpSteps(C, x1, y1, x));
+  const q = C.intro(x1, y1) + ' ' + (xs.length === 1 ? C.ask(xs[0]) : 'Work out the amounts below.' + (kind ? ' Then decide: are the two quantities in direct or inverse proportion?' : ''));
+  const parts = xs.map((x, k) => [C.lab(x), dA(C, R[k].y2)]); if (kind) parts.push(['Direct or inverse proportion?', MQ(mkRng(x1 * 131 + Math.round(y1 * 100)), ['Direct proportion', 'Inverse proportion'], 0)]);
+  const sol = [{ en: DP_WHY }]; R.forEach((Rk, k) => { if (xs.length > 1) sol.push({ en: C.lab(xs[k]) + ':' }); Rk.st.forEach(s => sol.push(s)); });
+  if (kind) sol.push({ en: 'When the ' + C.xu[1] + ' double, the ' + (C.money ? 'cost' : C.yu) + ' doubles too: both go up in the same ratio. That is direct proportion.' });
+  return { q, ans: parts.length === 1 ? parts[0][1] : multi(...parts), sol };
+}
+/* how many x for a given y (the other way round) */
+function dpBack(C, x1, y1, y2) {
+  const rate = dV(y1 / x1), x2 = dV(y2 / rate); const tn11 = v => C.money && !Number.isInteger(v) ? v.toFixed(2) : fx(v);
+  const sol = [{ en: DP_WHY }, x1 === 1 ? { en: 'Each ' + C.xu[0] + ' gives ' + dY(C, rate) + '. Count how many lots of ' + dY(C, rate) + ' make ' + dY(C, y2) + ': divide.' } : { en: 'First find ONE ' + C.xu[0] + ': ' + dY(C, y1) + ' ÷ ' + x1 + ' = ' + dY(C, rate) + '. Then count how many lots of ' + dY(C, rate) + ' make ' + dY(C, y2) + '.', tex: tn11(y1) + ' \\div ' + x1 + ' = ' + tn11(rate) },
+    { en: '', tex: tn11(y2) + ' \\div ' + tn11(rate) + ' = ' + tn11(x2) }, { en: 'Check: ' + pl(x2, C.xu[0], C.xu[1]) + ' give ' + dY(C, y2) + '.', tex: tn11(rate) + ' \\times ' + tn11(x2) + ' = ' + tn11(y2) }];
+  return { q: C.intro(x1, y1) + ' ' + C.askX(y2), ans: N(fx(x2), { unit: C.xu[1] }), sol };
+}
+/* a recipe: amounts for n1 items, wanted for n2 items (n2 a simple multiple of n1); ings: [name, amount, unit] — unit '' for a count (2 eggs) */
+function dpRecipe(name, n1, ings, n2s, picks) {
+  const one = g => big(g[1]) + (g[2] ? ' ' + g[2] : '') + ' ' + g[0];
+  const card = '<div class="rcp"><b>' + esx11(name) + '</b> <span class="muted">(makes ' + n1 + ')</span>' + ings.map(g => '<div>' + esx11(one(g)) + '</div>').join('') + '</div>';
+  const parts = picks.map((gi, k) => { const g = ings[gi], m = dV(n2s[k] / n1), v = dV(g[1] * m); return { lab: cap11(g[0]) + ' for ' + n2s[k], v, m, g, n2: n2s[k] }; });
+  const sol = [{ en: 'The amount of each ingredient is in direct proportion to the number you make: twice as many need twice as much of everything.' }];
+  parts.forEach(P => sol.push({ en: P.lab + ': ' + P.n2 + ' is ' + (P.m === 0.5 ? 'half of ' + n1 + ', so halve the ' + P.g[0] + '.' : P.m === 1.5 ? '1.5 times ' + n1 + ' (one and a half recipes), so multiply the ' + P.g[0] + ' by 1.5.' : P.m + ' times ' + n1 + ', so multiply the ' + P.g[0] + ' by ' + P.m + '.'), tex: tn11(P.g[1]) + ' \\times ' + fx(P.m) + ' = ' + tn11(P.v) + (P.g[2] ? '\\ \\text{' + P.g[2] + '}' : '') }));
+  return { q: 'Here is a recipe for ' + name.toLowerCase() + '. Work out how much of each ingredient is needed.', html: card, ans: multi(...parts.map(P => [P.lab, N(fx(P.v), { unit: P.g[2] || P.g[0] })])), sol };
+}
+const RECIPES = [
+  ['Honey biscuits', 25, [['butter', 50, 'g'], ['icing sugar', 75, 'g'], ['flour', 75, 'g'], ['honey', 100, 'mL']]],
+  ['Pancakes', 12, [['flour', 200, 'g'], ['milk', 300, 'mL'], ['eggs', 2, ''], ['sugar', 30, 'g']]],
+  ['Fruit smoothies', 4, [['bananas', 2, ''], ['yoghurt', 240, 'g'], ['milk', 320, 'mL'], ['honey', 20, 'mL']]],
+  ['Oat cookies', 20, [['oats', 150, 'g'], ['butter', 80, 'g'], ['sugar', 60, 'g'], ['milk', 40, 'mL']]],
+  ['Lemonade', 6, [['lemons', 4, ''], ['sugar', 90, 'g'], ['water', 1200, 'mL']]]
+];
+function genRecipe(r) {
+  for (let g = 0; g < 100; g++) { const R0 = r.pick(RECIPES); const n1 = R0[1], ings = R0[2]; const ms = r.sh([0.5, 1.5, 2, 3, 4]).slice(0, r.ri(2, 3)); const picks = r.sh(ings.map((x, k) => k)).slice(0, ms.length);
+    if (!picks.every((gi, k) => Number.isInteger(dV(ings[gi][1] * ms[k])) && Number.isInteger(n1 * ms[k]))) continue;
+    return dpRecipe(R0[0], n1, ings, picks.map((gi, k) => n1 * ms[k]), picks); }
+  throw new Error('recipe');
+}
+function genDirect(r, vi) {
+  for (let g = 0; g < 200; g++) {
+    const C = CTXD[r.pick(vi === 0 ? ['typing', 'peanuts', 'printer'] : vi === 1 ? ['notebooks', 'wages', 'ribbon', 'fuel'] : CTXDK)](r); const rate = r.pick(C.rates); const x1 = r.pick(C.n1s); const y1 = dV(rate * x1);
+    if (vi <= 1) { const x2 = r.pick([2, 3, 4, 5, 6, 7, 8, 9, 10, 12].filter(x => x !== x1)); if (!C.money && !Number.isInteger(rate * x2)) continue; if (C.money && !Number.isInteger(dV(rate * x2 * 100))) continue; return dpRate(C, x1, y1, [x2]); }
+    const x2 = r.pick([2, 3, 4, 5, 6, 8, 10, 12, 15]); if (x2 === x1) continue; return dpBack(C, x1, y1, dV(rate * x2));
+  }
+  throw new Error('direct');
+}
+topic({ id: '11.2a', sec: '11.2', en: 'Direct proportion', variants: 4,
+  hints: [
+    'Two quantities are in direct proportion when they grow (or shrink) in the same ratio: twice as many bags cost twice as much, three times as many minutes give three times as many words.',
+    'Set it out in two lines and do the SAME thing to both sides. 1 minute → 40 words; multiply both by 3: 3 minutes → 120 words.',
+    'If you are not told about ONE of something, find it first (the unitary method): 5 notebooks cost \\$8.50, so 1 notebook costs $8.50 ÷ 5 = 1.70$ dollars, and 3 notebooks cost $3 × 1.70 = 5.10$ dollars.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    if (vi === 2) return genRecipe(r);
+    return genDirect(r, vi === 3 ? 3 : vi);
+  } });
+
+/* ---------- inverse proportion: people and time ---------- */
+const JOBS = [
+  { who: ['person', 'people'], verb: 'build a wall', obj: 'build the wall', tu: ['day', 'days'] },
+  { who: ['person', 'people'], verb: 'build a shed', obj: 'build the shed', tu: ['hour', 'hours'] },
+  { who: ['person', 'people'], verb: 'dig a hole', obj: 'dig the hole', tu: ['day', 'days'] },
+  { who: ['painter', 'painters'], verb: 'paint a fence', obj: 'paint the fence', tu: ['hour', 'hours'] },
+  { who: ['picker', 'pickers'], verb: 'pick all the apples in an orchard', obj: 'pick all the apples', tu: ['day', 'days'] },
+  { who: ['cleaner', 'cleaners'], verb: 'clean a school', obj: 'clean the school', tu: ['hour', 'hours'] },
+  { who: ['worker', 'workers'], verb: 'lay a path', obj: 'lay the path', tu: ['day', 'days'] }
+];
+const jW = (J, n) => pl(n, J.who[0], J.who[1]); const jT = (J, t) => pl(t, J.tu[0], J.tu[1]);
+const jWt = (J, n) => tx11(n, n === 1 ? J.who[0] : J.who[1]); const jTt = (J, t) => tx11(t, t === 1 ? J.tu[0] : J.tu[1]);
+const IP_WHY = J => 'More ' + J.who[1] + ' finish the job in less time: the number of ' + J.who[1] + ' and the time are in inverse proportion. When one is multiplied by a number, the other is divided by the same number. (We assume everyone works at the same speed.)';
+/* k1 workers take t1; ask: { k2 } time for k2 workers · { t2 } workers needed for time t2 · { k2, hm: true } answer in hours and minutes */
+function ipWork(J, k1, t1, ask) {
+  const W = k1 * t1, sol = [{ en: IP_WHY(J) }];
+  const intro = 'It takes ' + jW(J, k1) + ' ' + jT(J, t1) + ' to ' + J.verb + '.';
+  if (ask.t2 != null) { const k2 = W / ask.t2;
+    sol.push({ en: 'The whole job needs ' + jW(J, k1) + ' × ' + jT(J, t1) + ' = ' + W + ' ' + J.who[0] + '-' + J.tu[1] + ' of work. That amount of work stays the same.', tex: k1 + ' \\times ' + t1 + ' = ' + W });
+    sol.push({ en: 'To finish in ' + jT(J, ask.t2) + ', share the ' + W + ' ' + J.who[0] + '-' + J.tu[1] + ' between ' + jT(J, ask.t2) + ':', tex: W + ' \\div ' + ask.t2 + ' = ' + k2 });
+    sol.push({ en: 'Check: ' + jW(J, k2) + ' × ' + jT(J, ask.t2) + ' is ' + W + ' again.', tex: arrN([[jWt(J, k1), jTt(J, t1)], [jWt(J, 1), jTt(J, W)], [jWt(J, k2), jTt(J, ask.t2)]], [['\\div ' + k1, '\\times ' + k1], ['\\times ' + k2, '\\div ' + k2]]) });
+    return { q: intro + ' How many ' + J.who[1] + ' are needed to ' + J.obj + ' in ' + jT(J, ask.t2) + '?', ans: N(fx(k2), { unit: J.who[1] }), sol }; }
+  const k2 = ask.k2, t2 = dV(W / k2);
+  if (ask.hm) { const mins = Math.round(W * 60 / k2);
+    sol.push({ en: 'Work in minutes: ' + jT(J, t1) + ' = ' + (t1 * 60) + ' minutes. One ' + J.who[0] + ' alone would take ' + k1 + ' times as long:', tex: k1 + ' \\times ' + (t1 * 60) + ' = ' + (k1 * t1 * 60) });
+    sol.push({ en: jW(J, k2) + ' take ' + k2 + ' times less time than one ' + J.who[0] + ':', tex: (k1 * t1 * 60) + ' \\div ' + k2 + ' = ' + mins });
+    sol.push({ en: mins + ' minutes is ' + pl(Math.floor(mins / 60), 'hour', 'hours') + ' and ' + pl(mins % 60, 'minute', 'minutes') + ' (60 minutes make an hour).', tex: mins + ' = ' + Math.floor(mins / 60) + ' \\times 60 + ' + (mins % 60) });
+    return { q: intro + ' How long does it take ' + jW(J, k2) + ' to ' + J.obj + '? Give your answer in hours and minutes.', ans: { k: 'dur', key: String(mins), u: 'hm' }, sol }; }
+  if (k2 === 1) { sol.push({ en: 'One ' + J.who[0] + ' does all the work alone, so it takes ' + k1 + ' times as long: divide the ' + J.who[1] + ' by ' + k1 + ' and multiply the time by ' + k1 + '.', tex: arrN([[jWt(J, k1), jTt(J, t1)], [jWt(J, 1), jTt(J, W)]], [['\\div ' + k1, '\\times ' + k1]]) }); sol.push({ en: '', tex: t1 + ' \\times ' + k1 + ' = ' + W }); }
+  else if (k2 % k1 === 0 || k1 % k2 === 0) { const up = k2 > k1, m = up ? k2 / k1 : k1 / k2;
+    sol.push({ en: (up ? m + ' times as many ' + J.who[1] + ' take ' + m + ' times less time' : m + ' times fewer ' + J.who[1] + ' take ' + m + ' times as long') + ':', tex: arrN([[jWt(J, k1), jTt(J, t1)], [jWt(J, k2), jTt(J, t2)]], [[(up ? '\\times ' : '\\div ') + m, (up ? '\\div ' : '\\times ') + m]]) });
+    sol.push({ en: '', tex: tn11(t1) + (up ? ' \\div ' : ' \\times ') + m + ' = ' + tn11(t2) }); }
+  else { sol.push({ en: 'Go through ONE ' + J.who[0] + ': alone, the job takes ' + k1 + ' times as long. Then ' + k2 + ' ' + J.who[1] + ' take ' + k2 + ' times less time.', tex: arrN([[jWt(J, k1), jTt(J, t1)], [jWt(J, 1), jTt(J, W)], [jWt(J, k2), jTt(J, t2)]], [['\\div ' + k1, '\\times ' + k1], ['\\times ' + k2, '\\div ' + k2]]) });
+    sol.push({ en: '', tex: t1 + ' \\times ' + k1 + ' = ' + W }); sol.push({ en: '', tex: W + ' \\div ' + k2 + ' = ' + tn11(t2) }); }
+  sol.push({ en: 'Check: the number of ' + J.who[1] + ' × the time stays the same.', tex: k2 + ' \\times ' + tn11(t2) + ' = ' + k1 + ' \\times ' + t1 });
+  return { q: intro + ' How long ' + (k2 === 1 ? 'would it take one ' + J.who[0] : 'does it take ' + jW(J, k2)) + ' to ' + J.obj + '?', ans: N(fx(t2), { unit: t2 === 1 ? J.tu[0] : J.tu[1] }), sol };
+}
+topic({ id: '11.2b', sec: '11.2', en: 'Inverse proportion: people and time', variants: 4,
+  hints: [
+    'More people working means the job is finished sooner. Twice as many people take half the time. That is inverse proportion: when one quantity is multiplied by a number, the other is divided by the same number.',
+    'The amount of work stays the same. 2 people × 6 days = 12 “person-days” of work. One person needs all 12 days; 4 people need $12 ÷ 4 = 3$ days.',
+    'Set it out with arrows: 2 people → 6 days. Divide the people by 2 and MULTIPLY the days by 2: 1 person → 12 days. Then multiply the people by 4 and DIVIDE the days by 4: 4 people → 3 days.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    for (let g = 0; g < 300; g++) { const J = r.pick(JOBS); const k1 = r.ri(2, 8); const t1 = r.ri(2, J.tu[0] === 'hour' ? 9 : 12); const W = k1 * t1;
+      if (vi === 0) return ipWork(J, k1, t1, { k2: 1 });
+      if (vi === 1) { const k2 = r.ri(2, 12); if (k2 === k1 || !Number.isInteger(W / k2 * 2) || W / k2 < 1) continue; return ipWork(J, k1, t1, { k2 }); }
+      if (vi === 2) { const t2 = r.ri(1, 12); if (t2 === t1 || !Number.isInteger(W / t2) || W / t2 > 30) continue; return ipWork(J, k1, t1, { t2 }); }
+      const Jh = r.pick(JOBS.filter(x => x.tu[0] === 'hour')); const a = r.ri(2, 6), h = r.ri(1, 4), b = r.ri(2, 8); const mins = a * h * 60 / b; if (b === a || !Number.isInteger(mins) || mins < 60 || mins % 60 === 0) continue;
+      return ipWork(Jh, a, h, { k2: b, hm: true }); }
+    throw new Error('11.2b');
+  } });
+
+/* ---------- inverse proportion: speed and time, sharing a fixed cost ---------- */
+function ipSpeed(M, t1, s1, ask) {
+  const D = s1 * t1, h = he11(M), him = h === 'she' ? 'her' : 'him';
+  const sol = [{ en: 'The distance is the same every time, so a higher speed means less time: speed and time are in inverse proportion. Speed × time = distance stays the same.' },
+    { en: 'Distance = speed × time:', tex: s1 + ' \\times ' + t1 + ' = ' + D + '\\ \\text{km}' }];
+  const intro = 'It takes ' + M + ' ' + pl(t1, 'hour', 'hours') + ' to drive a certain distance at an average speed of ' + s1 + ' km/h.';
+  if (ask.s2 != null) { const t2 = dV(D / ask.s2); sol.push({ en: 'At ' + ask.s2 + ' km/h the same ' + D + ' km takes:', tex: D + ' \\div ' + ask.s2 + ' = ' + tn11(t2) + '\\ \\text{hours}' });
+    if (ask.s2 % s1 === 0 || s1 % ask.s2 === 0) { const up = ask.s2 > s1, m = up ? ask.s2 / s1 : s1 / ask.s2; sol.push({ en: 'Or with arrows: ' + (up ? m + ' times as fast takes ' + m + ' times less time.' : m + ' times slower takes ' + m + ' times as long.'), tex: arrN([[tx11(s1, 'km/h'), tx11(t1, t1 === 1 ? 'hour' : 'hours')], [tx11(ask.s2, 'km/h'), tx11(t2, t2 === 1 ? 'hour' : 'hours')]], [[(up ? '\\times ' : '\\div ') + m, (up ? '\\div ' : '\\times ') + m]]) }); }
+    return { q: intro + ' How long does it take ' + him + ' to drive the same distance at an average speed of ' + ask.s2 + ' km/h?', ans: N(fx(t2), { unit: 'hours' }), sol }; }
+  const s2 = dV(D / ask.t2); sol.push({ en: 'To cover ' + D + ' km in ' + pl(ask.t2, 'hour', 'hours') + ':', tex: D + ' \\div ' + ask.t2 + ' = ' + tn11(s2) + '\\ \\text{km/h}' });
+  return { q: intro + ' Another time it takes ' + him + ' ' + pl(ask.t2, 'hour', 'hours') + ' to drive the same distance. What is ' + his11(M) + ' average speed?', ans: N(fx(s2), { unit: 'km/h' }), sol };
+}
+function ipRun(F, t1, m, faster) {
+  const t2 = faster ? dV(t1 / m) : t1 * m, word = m === 2 ? (faster ? 'twice as fast' : 'half as fast') : (faster ? m + ' times as fast' : 'at a third of her normal speed');
+  const sol = [{ en: 'Faster means less time for the same distance: speed and time are in inverse proportion.' },
+    { en: (faster ? 'Multiply the speed by ' + m + ', so divide the time by ' + m + ':' : 'Divide the speed by ' + m + ', so multiply the time by ' + m + ':'), tex: arrN([['\\text{normal speed}', tx11(t1, 'seconds')], [faster ? m + ' \\times \\text{speed}' : '\\tfrac{1}{' + m + '}\\ \\text{speed}', tx11(t2, 'seconds')]], [[(faster ? '\\times ' : '\\div ') + m, (faster ? '\\div ' : '\\times ') + m]]) },
+    { en: '', tex: t1 + (faster ? ' \\div ' : ' \\times ') + m + ' = ' + tn11(t2) }];
+  return { q: F + ' runs from ' + his11(F) + ' house to the bus stop in ' + t1 + ' seconds. How long does it take ' + (he11(F) === 'she' ? 'her' : 'him') + ' if ' + he11(F) + ' runs ' + word + '?', ans: N(fx(t2), { unit: 'seconds' }), sol };
+}
+const SHARE = [
+  { what: 'rent a holiday house', who: ['student', 'students'], tail: 'per month' },
+  { what: 'hire a minibus for a trip', who: ['friend', 'friends'], tail: '' },
+  { what: 'hire a boat for a day', who: ['person', 'people'], tail: '' },
+  { what: 'buy a present for their teacher', who: ['pupil', 'pupils'], tail: '' }
+];
+function ipShare(S, n1, c1, n2) {
+  const T = n1 * c1, c2 = dV(T / n2);
+  const sol = [{ en: 'The total cost is fixed, so the more ' + S.who[1] + ' share it, the less each one pays: the number of ' + S.who[1] + ' and the cost for each are in inverse proportion.' },
+    { en: 'Total cost = number of ' + S.who[1] + ' × cost for each:', tex: n1 + ' \\times ' + c1 + ' = ' + T },
+    { en: 'Share the total between ' + pl(n2, S.who[0], S.who[1]) + (Number.isInteger(c2) ? ':' : ' (round to the nearest cent):'), tex: T + ' \\div ' + n2 + (Number.isInteger(dV(c2 * 100)) ? ' = ' + (Number.isInteger(c2) ? c2 : c2.toFixed(2)) : ' = ' + texCut(T / n2, 4) + ' \\approx ' + (Math.round(T / n2 * 100) / 100).toFixed(2)) }];
+  const exact = Number.isInteger(dV(c2 * 100));
+  return { q: 'The cost to ' + S.what + ' is a set price. When ' + n1 + ' ' + S.who[1] + ' share it, each pays ' + usd(c1) + (S.tail ? ' ' + S.tail : '') + '. How much does each pay when ' + n2 + ' ' + S.who[1] + ' share it?' + (exact ? '' : ' Give your answer to the nearest cent.'),
+    ans: exact ? N(money2(c2), { pre: '$' }) : N((Math.round(T / n2 * 100) / 100).toFixed(2), { pre: '$', dp: 2 }), sol };
+}
+topic({ id: '11.2c', sec: '11.2', en: 'Inverse proportion: speed, time and sharing a cost', variants: 4,
+  hints: [
+    'For the SAME distance, going faster takes less time. Twice as fast takes half the time. Speed and time are in inverse proportion.',
+    'Use what stays the same. For a journey it is the distance: speed × time. 80 km/h for 6 hours is 480 km; at 120 km/h the 480 km take $480 ÷ 120 = 4$ hours.',
+    'When a fixed cost is shared, the total stays the same: 5 students paying \\$240 each is \\$1200 in total. Shared between 4 students it is $1200 ÷ 4 = 300$ dollars each.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    for (let g = 0; g < 300; g++) {
+      if (vi <= 1) { const M = r.pick(NAMES_M.concat(NAMES_F)); const s1 = r.pick([40, 50, 60, 70, 75, 80, 90, 100, 120]); const t1 = r.ri(2, 8); const D = s1 * t1;
+        if (vi === 0) { const s2 = r.pick([30, 40, 45, 48, 50, 60, 64, 75, 80, 90, 96, 100, 120, 150, 160]); if (s2 === s1 || !Number.isInteger(D / s2 * 2)) continue; return ipSpeed(M, t1, s1, { s2 }); }
+        const t2 = r.ri(2, 12); if (t2 === t1 || !Number.isInteger(D / t2) || D / t2 < 30 || D / t2 > 130) continue; return ipSpeed(M, t1, s1, { t2 }); }
+      if (vi === 2) { const F = r.pick(NAMES_F.concat(NAMES_M)); const t1 = r.pick([30, 40, 45, 48, 60, 72, 75, 80, 90, 120]); const m = r.pick([2, 2, 3]); const fast = r() < 0.6; if (fast && !Number.isInteger(t1 / m)) continue; return ipRun(F, t1, m, fast); }
+      const S = r.pick(SHARE); const n1 = r.ri(3, 8); const c1 = r.pick([20, 24, 30, 36, 40, 45, 60, 80, 90, 120, 150, 180, 240]); const n2 = r.ri(2, 10); if (n2 === n1) continue; const T = n1 * c1;
+      if (!Number.isInteger(T / n2 * 100) && r() < 0.7) continue; return ipShare(S, n1, c1, n2); }
+    throw new Error('11.2c');
+  } });
+
+/* ---------- direct, inverse or neither? ---------- */
+const PK11 = { d: 'Direct proportion', i: 'Inverse proportion', n: 'Neither' };
+const SIT = [
+  { k: 'd', pair: 'the number of bags of peanuts you buy and the total cost', why: 'Buy twice as many bags and you pay twice as much: both quantities are multiplied by the same number.', ml: ['When you buy more bags of peanuts, do you pay more or less?', ['More', 'Less', 'The same'], 0] },
+  { k: 'd', pair: 'the number of minutes Sam types and the number of words he types', why: 'In twice the time he types twice as many words: both go up in the same ratio.', ml: ['When Sam types for longer, does he type more words or fewer words?', ['More words', 'Fewer words', 'The same number of words'], 0] },
+  { k: 'd', pair: 'the number of hours Ana works (she is paid by the hour) and the money she earns', why: 'Work three times as long and she earns three times as much.', ml: ['When Ana works fewer hours, does she earn more or less?', ['More', 'Less', 'The same'], 1] },
+  { k: 'd', pair: 'the number of biscuits you bake and the mass of flour you need', why: 'Twice as many biscuits need twice as much flour.', ml: ['When you bake fewer biscuits, do you need more flour or less flour?', ['More flour', 'Less flour', 'The same amount of flour'], 1] },
+  { k: 'd', pair: 'the time a car drives at a steady speed and the distance it travels', why: 'At a steady speed, twice the time covers twice the distance.', ml: ['When the car drives for longer at the same speed, does it go further or less far?', ['Further', 'Less far', 'The same distance'], 0] },
+  { k: 'i', pair: 'the number of people building a wall and the number of days it takes', why: 'Twice as many people finish in half the time: when one quantity is multiplied by 2, the other is divided by 2.', ml: ['When more people build the wall, does the job take more or less time?', ['More time', 'Less time', 'The same time'], 1] },
+  { k: 'i', pair: 'the speed Jess runs and the time she takes to reach the bus stop', why: 'Running twice as fast, she needs half the time.', ml: ['When Jess runs more slowly, does it take her more or less time?', ['More time', 'Less time', 'The same time'], 0] },
+  { k: 'i', pair: 'the number of students sharing a fixed rent and the cost for each student', why: 'Twice as many students each pay half as much.', ml: ['When more students share the rent, does each student pay more or less?', ['More', 'Less', 'The same'], 1] },
+  { k: 'i', pair: 'the number of sheep and the number of days a bag of feed lasts', why: 'Twice as many sheep finish the bag in half the time.', ml: ['When there are fewer sheep, does the bag of feed last more days or fewer days?', ['More days', 'Fewer days', 'The same number of days'], 0] },
+  { k: 'i', pair: 'the number of taps filling a tank and the time it takes to fill it', why: 'Two taps fill the tank in half the time one tap takes.', ml: ['When more taps are turned on, does the tank take more or less time to fill?', ['More time', 'Less time', 'The same time'], 1] },
+  { k: 'i', pair: 'the number of equal slices a pizza is cut into and the size of each slice', why: 'Cut it into twice as many slices and each slice is half as big.', ml: ['When the pizza is cut into more slices, is each slice bigger or smaller?', ['Bigger', 'Smaller', 'The same size'], 1] },
+  { k: 'n', pair: 'the number of people on a train and the time the journey takes', why: 'The train takes the same time whether 60 or 120 people are on it: the time does not change with the number of people, so it is neither.' },
+  { k: 'n', pair: 'the number of musicians playing a song together and the time the song takes', why: 'A song lasts as long with 6 musicians as with 3: more musicians do not make it shorter, so it is neither.' },
+  { k: 'n', pair: 'the number of people watching a film and the length of the film', why: 'The film is just as long however many people watch it, so it is neither.' },
+  { k: 'n', pair: 'a child’s age and the child’s height', why: 'Height goes up with age, but not in the same ratio: a 10-year-old is not twice as tall as a 5-year-old. So it is neither.' }
+];
+function pcKind(S, two, qText) {
+  const opts = two ? [PK11.d, PK11.i] : [PK11.d, PK11.i, PK11.n];
+  return { q: qText || 'Are these two quantities in direct proportion, in inverse proportion, or neither? ' + cap11(S.pair) + '.', ans: MQ(mkRng(S.pair.length * 97 + (two ? 1 : 0)), opts, opts.indexOf(PK11[S.k])),
+    sol: [{ en: 'Test it: what happens to the second quantity when the first one doubles?' }, { en: S.why }, { en: S.k === 'd' ? 'Both change in the same ratio, so they are in direct proportion.' : S.k === 'i' ? 'One goes up as the other goes down in the same ratio, so they are in inverse proportion.' : 'Neither direct nor inverse proportion.' }] };
+}
+function pcMoreLess(S) {
+  const [qq, opts, c] = S.ml;
+  return { q: qq, ans: MQ(mkRng(qq.length * 13 + c), opts, c), sol: [{ en: S.why }, { en: 'So the answer is: ' + opts[c].toLowerCase() + '.' }] };
+}
+/* someone uses (or misuses) proportion; is the claim right? */
+function pcClaim(r) {
+  const who = r.pick(NAMES_F.concat(NAMES_M)), t = r.ri(0, 4);
+  if (t === 0) { const T = r.pick([15, 20, 25, 30, 40, 45]), P = r.pick([40, 50, 60, 80]); const [A, B] = r.sh(['Pembroke', 'Tenby', 'Hartley', 'Easton', 'Milford', 'Kingsley']);
+    return pcTrain(who, T, P, 2 * P, A, B); }
+  if (t === 1) { const J = r.pick(JOBS); const k = r.ri(2, 6), h = r.pick([4, 6, 8, 10, 12]);
+    return { q: 'It takes ' + jW(J, k) + ' ' + jT(J, h) + ' to ' + J.verb + '. ' + who + ' says, “' + jW(J, 2 * k) + ' will take ' + jT(J, 2 * h) + ', because the number of ' + J.who[1] + ' has doubled.” Is ' + who + ' right?',
+      ans: MQ(r, ['No. Twice as many ' + J.who[1] + ' take half the time: ' + jT(J, h / 2) + '.', 'Yes. When one number doubles, the other doubles too.', 'No. The time stays the same: ' + jT(J, h) + '.'], 0),
+      sol: [{ en: 'More ' + J.who[1] + ' finish sooner, so this is inverse proportion, not direct proportion.' }, { en: 'Double the ' + J.who[1] + ' and you halve the time:', tex: h + ' \\div 2 = ' + fx(h / 2) }, { en: who + ' doubled both numbers, as if it were direct proportion. That is the mistake.' }] }; }
+  if (t === 2) { const n = r.ri(2, 6), c = r.pick([3, 4.5, 6, 7.5, 8, 11, 12.5]);
+    return { q: n + ' bags of rice cost ' + usd(c) + '. ' + who + ' says, “' + (2 * n) + ' bags will cost ' + usd(c / 2) + ', because more bags make each one cheaper.” Is ' + who + ' right?',
+      ans: MQ(r, ['No. Twice as many bags cost twice as much: ' + usd(2 * c) + '.', 'Yes. The cost halves when the number of bags doubles.', 'No. They still cost ' + usd(c) + '.'], 0),
+      sol: [{ en: 'Every bag costs the same, so the number of bags and the total cost are in direct proportion.' }, { en: 'Double the bags, double the cost:', tex: money2(c) + ' \\times 2 = ' + money2(2 * c) }] }; }
+  if (t === 3) { const n = r.ri(2, 5), c = r.pick([1.2, 1.8, 2.4, 3, 3.6]), m = r.pick([2, 3]);
+    return { q: n + ' pens cost ' + usd(c) + '. ' + who + ' says, “' + (m * n) + ' pens cost ' + usd(dV(m * c)) + '.” Is ' + who + ' right?',
+      ans: MQ(r, ['Yes. The number of pens and the cost are in direct proportion.', 'No. ' + (m * n) + ' pens cost ' + usd(dV(c / m)) + '.', 'No. ' + (m * n) + ' pens cost ' + usd(c) + '.'], 0),
+      sol: [{ en: (m * n) + ' pens is ' + m + ' times as many as ' + n + ' pens, and they cost ' + m + ' times as much:', tex: money2(c) + ' \\times ' + m + ' = ' + money2(dV(m * c)) }, { en: 'So ' + who + ' is right: this is direct proportion.' }] }; }
+  const k = r.ri(1, 3), t0 = r.pick([20, 30, 40, 60, 90]);
+  return { q: 'It takes ' + pl(k, 'tap', 'taps') + ' ' + t0 + ' minutes to fill a water tank. ' + who + ' says, “' + (2 * k) + ' taps will fill the tank in ' + (t0 / 2) + ' minutes.” Is ' + who + ' right? (All the taps run at the same rate.)',
+    ans: MQ(r, ['Yes. Twice as many taps take half the time: inverse proportion.', 'No. Twice as many taps take twice as long: ' + (2 * t0) + ' minutes.', 'No. It still takes ' + t0 + ' minutes.'], 0),
+    sol: [{ en: 'More taps fill the tank faster, so the number of taps and the time are in inverse proportion.' }, { en: 'Double the taps, halve the time:', tex: t0 + ' \\div 2 = ' + (t0 / 2) }, { en: 'So ' + who + ' is right.' }] };
+}
+function pcTrain(who, T, P, P2, A, B) {
+  return { q: 'It takes ' + T + ' minutes to travel by train from ' + A + ' to ' + B + '. There are ' + P + ' people on the train. ' + who + ' says, “When there are ' + P2 + ' people on the train, it will take ' + (T * P2 / P) + ' minutes, because the number of people has ' + (P2 === 2 * P ? 'doubled' : 'gone up') + '.” What do you think?',
+    ans: MQ(mkRng(T * 7 + P), ['' + who + ' is wrong: the number of people does not change the journey time. It still takes ' + T + ' minutes.', who + ' is right: twice as many people take twice as long.', who + ' is wrong: more people make the train faster, so it takes ' + (T * P / P2) + ' minutes.'], 0),
+    sol: [{ en: 'Ask: does the time really depend on the number of people? The train drives the same route at the same speed however many people are on it.' }, { en: 'So the time and the number of people are NOT in proportion — neither direct nor inverse. The journey still takes ' + T + ' minutes.' }, { en: who + ' used direct proportion where it does not apply. Before you use proportion, check that one quantity really changes in the same ratio as the other.' }] };
+}
+topic({ id: '11.2d', sec: '11.2', en: 'Direct, inverse or neither?', variants: 3,
+  hints: [
+    'Imagine doubling the first quantity. If the second one also doubles, it is direct proportion. If the second one halves, it is inverse proportion.',
+    'Direct: more bags of peanuts, more money to pay. Inverse: more people building a wall, fewer days to finish. Same work or same distance shared out — that is the clue to inverse proportion.',
+    'Some pairs are neither: a train takes the same time however many people are on it. Always ask whether one quantity really depends on the other in the same ratio before you multiply or divide.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 2);
+    if (vi === 0) return pcKind(r.pick(SIT));
+    if (vi === 1) return pcMoreLess(r.pick(SIT.filter(s => s.ml)));
+    return pcClaim(r);
+  } });
+
+/* ---------- tables of values ---------- */
+/* o: { kind: 'd' | 'i', lab: [row 1, row 2], xs, ys, unk: [[row, col], …] }; the unknown cells get letters A, B, C … */
+function ptTable(o) {
+  const L0 = 'ABCDEFGH'; const vals = [o.xs, o.ys]; const unk = o.unk.slice().sort((p, q) => p[1] - q[1] || p[0] - q[0]);
+  const letter = (rw, c) => { const k = unk.findIndex(u => u[0] === rw && u[1] === c); return k < 0 ? null : L0[k]; };
+  const cell = (rw, c) => { const L = letter(rw, c); return L ? '<td class="tdq"><b>' + L + '</b></td>' : '<td>' + big(vals[rw][c]) + '</td>'; };
+  const html = '<table class="pblk tx nohead">' + [0, 1].map(rw => '<tr><th>' + esx11(o.lab[rw]) + '</th>' + vals[rw].map((v, c) => cell(rw, c)).join('') + '</tr>').join('') + '</table>';
+  const full = vals[0].map((v, c) => c).filter(c => !letter(0, c) && !letter(1, c)); const c0 = full[0]; const x0 = o.xs[c0], y0 = o.ys[c0];
+  const k = o.kind === 'd' ? dV(y0 / x0) : dV(x0 * y0);
+  const sol = [o.kind === 'd' ? { en: 'In direct proportion the second number ÷ the first number is the same for every column. Use a column you know completely' + (Number.isInteger(k * 1000) ? ':' : ' — here it is a fraction:'), tex: tn11(y0) + ' \\div ' + tn11(x0) + ' = ' + (Number.isInteger(k * 1000) ? tn11(k) : '\\tfrac{' + y0 + '}{' + x0 + '}') }
+    : { en: 'In inverse proportion the first number × the second number is the same for every column. Use a column you know completely:', tex: tn11(x0) + ' \\times ' + tn11(y0) + ' = ' + tn11(k) }];
+  if (o.kind === 'd' && !Number.isInteger(k * 1000)) sol.push({ en: 'So from the first row to the second: multiply by ' + y0 + ' and divide by ' + x0 + '. From the second row back to the first: multiply by ' + x0 + ' and divide by ' + y0 + '.' });
+  const parts = unk.map(([rw, c], n) => { const v = vals[rw][c]; const L = L0[n]; const xo = o.xs[c], yo = o.ys[c]; let tex, en;
+    if (o.kind === 'd') { if (rw === 1) { en = L + ': multiply ' + big(xo) + ' by the same number.'; tex = Number.isInteger(k * 1000) ? tn11(xo) + ' \\times ' + tn11(k) + ' = ' + tn11(v) : tn11(xo) + ' \\times ' + y0 + ' \\div ' + x0 + ' = ' + tn11(v); }
+      else { en = L + ': divide ' + big(yo) + ' by the same number.'; tex = Number.isInteger(k * 1000) ? tn11(yo) + ' \\div ' + tn11(k) + ' = ' + tn11(v) : tn11(yo) + ' \\times ' + x0 + ' \\div ' + y0 + ' = ' + tn11(v); } }
+    else { const other = rw === 1 ? xo : yo; en = L + ': the product must be ' + big(k) + ', so divide ' + big(k) + ' by ' + big(other) + '.'; const ex = Number.isInteger(dV(v * 100)); tex = tn11(k) + ' \\div ' + tn11(other) + (ex ? ' = ' + tn11(v) : ' = ' + texCut(k / other, 4) + ' \\approx ' + (Math.round(k / other * 100) / 100).toFixed(2)); }
+    sol.push({ en, tex });
+    const ex = Number.isInteger(dV(v * 100)); return [L + (ex ? '' : ' (to 2 decimal places)'), ex ? N(fx(v)) : N((Math.round(v * 100) / 100).toFixed(2), { dp: 2 })]; });
+  return { q: (o.q ? o.q + ' ' : '') + 'The values in this table are in ' + (o.kind === 'd' ? 'direct' : 'inverse') + ' proportion. Work out the missing number' + (parts.length > 1 ? 's' : '') + '.', html, ans: parts.length === 1 ? parts[0][1] : multi(...parts), sol };
+}
+const TABD = [['Mass of cheese (kg)', 'Cost ($)'], ['Time (minutes)', 'Pages printed'], ['Number of tickets', 'Cost ($)'], ['Petrol (litres)', 'Distance (km)'], ['x', 'y']];
+const TABI = [['Number of workers', 'Days to finish'], ['Speed (km/h)', 'Time (hours)'], ['Number of students', 'Cost each ($)'], ['Number of taps', 'Minutes to fill'], ['x', 'y']];
+function genTable(r, kind, nUnk) {
+  for (let g = 0; g < 300; g++) {
+    if (kind === 'd') { const k = r.pick([2, 3, 4, 5, 6, 1.5, 2.5, 0.5, 1.2, 3.5]); const xs = r.sh([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20]).slice(0, r.ri(4, 5)).sort((a, b) => a - b); const ys = xs.map(x => dV(x * k)); if (ys.some(y => !Number.isInteger(y * 10))) continue;
+      const cols = r.sh(xs.map((x, c) => c)).slice(0, nUnk); const unk = cols.map(c => [r() < 0.25 ? 0 : 1, c]); if (xs.some((x, c) => !unk.some(u => u[1] === c)) === false) continue;
+      return ptTable({ kind, lab: r.pick(TABD), xs, ys, unk }); }
+    const K = r.pick([24, 36, 48, 60, 72, 120, 180, 240]); const divs = []; for (let d = 1; d <= K; d++) if (K % d === 0 && d <= 60 && K / d <= 120) divs.push(d); const xs = r.sh(divs).slice(0, r.ri(4, 5)).sort((a, b) => a - b); const ys = xs.map(x => K / x);
+    const cols = r.sh(xs.map((x, c) => c)).slice(0, nUnk); const unk = cols.map(c => [r() < 0.25 ? 0 : 1, c]);
+    return ptTable({ kind, lab: r.pick(TABI), xs, ys, unk }); }
+  throw new Error('table');
+}
+function ptWhich(r) {
+  const t = r.ri(0, 2); let xs, ys;
+  if (t === 0) { const k = r.pick([2, 3, 4, 5, 1.5, 2.5]); xs = r.sh([1, 2, 3, 4, 5, 6, 8, 10]).slice(0, 4).sort((a, b) => a - b); ys = xs.map(x => dV(x * k)); }
+  else if (t === 1) { const K = r.pick([24, 36, 48, 60, 120]); const d = []; for (let x = 1; x <= 12; x++) if (K % x === 0) d.push(x); xs = r.sh(d).slice(0, 4).sort((a, b) => a - b); ys = xs.map(x => K / x); }
+  else { const c = r.ri(2, 9), m = r.ri(2, 5); xs = r.sh([1, 2, 3, 4, 5, 6, 8, 10]).slice(0, 4).sort((a, b) => a - b); ys = xs.map(x => m * x + c); }
+  const html = '<table class="pblk tx nohead"><tr><th>x</th>' + xs.map(v => '<td>' + big(v) + '</td>').join('') + '</tr><tr><th>y</th>' + ys.map(v => '<td>' + big(v) + '</td>').join('') + '</tr></table>';
+  const sol = [{ en: 'Check y ÷ x (the same every time means direct proportion) and x × y (the same every time means inverse proportion).' },
+    { en: 'y ÷ x: ' + xs.map((x, c) => fx(dV(ys[c] / x))).join(', ') + '.' }, { en: 'x × y: ' + xs.map((x, c) => fx(dV(ys[c] * x))).join(', ') + '.' },
+    { en: t === 0 ? 'y ÷ x is always ' + fx(dV(ys[0] / xs[0])) + ', so x and y are in direct proportion.' : t === 1 ? 'x × y is always ' + fx(xs[0] * ys[0]) + ', so x and y are in inverse proportion.' : 'Neither stays the same, so x and y are in neither direct nor inverse proportion (y goes up, but not in the same ratio as x).' }];
+  return { q: 'Are x and y in this table in direct proportion, inverse proportion, or neither?', html, ans: MQ(r, [PK11.d, PK11.i, PK11.n], t), sol };
+}
+topic({ id: '11.2e', sec: '11.2', en: 'Tables of values in proportion', variants: 4,
+  hints: [
+    'In a table of DIRECT proportion, every column has the same multiplier: second number = first number × the same value. So the second number ÷ the first is the same in every column.',
+    'In a table of INVERSE proportion, the product stays the same: first number × second number is the same in every column (like people × days for the same job).',
+    'Use a column where you know both numbers to find the multiplier (direct) or the product (inverse). Then fill each gap: multiply or divide by the multiplier, or divide the product by the number you know.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    if (vi === 0) return genTable(r, 'd', r.ri(2, 3));
+    if (vi === 1) return genTable(r, 'i', r.ri(2, 3));
+    if (vi === 2) return ptWhich(r);
+    return genTable(r, r() < 0.5 ? 'd' : 'i', 1);
+  } });
+
+/* =====================================================================================================================
+   CHALLENGE TOPICS (extra: never in the plan, the readiness or the tests)
+   ===================================================================================================================== */
+/* ---------- 11.1x ratio with decimals, shapes and angles ---------- */
+function rxDecimal(a, v) {   /* two numbers in the ratio a : b, one of them is v (a decimal) */
+  const o1 = dV(v / a[0] * a[1]), o2 = dV(v / a[1] * a[0]);
+  return { q: 'Two numbers are in the ratio ' + rat11(a) + '. One of the numbers is ' + fx(v) + '. Work out the two possible values for the other number.', ans: { k: 'list', key: fx(o1) + ',' + fx(o2), help: L('Both values, separated by a comma') },
+    sol: [{ en: 'As with whole numbers, ' + fx(v) + ' could be either number, so there are two cases.' },
+      { en: 'Case 1: ' + fx(v) + ' is the ' + a[0] + ' parts. One part is ' + fx(v) + ' ÷ ' + a[0] + ', and the other number is ' + a[1] + ' parts.', tex: fx(v) + ' \\div ' + a[0] + ' = ' + fx(dV(v / a[0])) + ', \\quad ' + fx(dV(v / a[0])) + ' \\times ' + a[1] + ' = ' + fx(o1) },
+      { en: 'Case 2: ' + fx(v) + ' is the ' + a[1] + ' parts. One part is ' + fx(v) + ' ÷ ' + a[1] + ', and the other number is ' + a[0] + ' parts.', tex: fx(v) + ' \\div ' + a[1] + ' = ' + fx(dV(v / a[1])) + ', \\quad ' + fx(dV(v / a[1])) + ' \\times ' + a[0] + ' = ' + fx(o2) },
+      { en: 'Tip: dividing a small decimal is easier in thousandths: ' + fx(v) + ' = ' + Math.round(v * 1000) + ' thousandths.' }] };
+}
+const POLY = { 3: 'triangle', 4: 'quadrilateral', 5: 'pentagon' };
+function rxPerimeter(a, d) {   /* sides in the ratio a, longest − shortest = d cm */
+  const mx = Math.max(...a), mn = Math.min(...a), p = dV(d / (mx - mn)), P = dV(sum11(a) * p);
+  const hl = a.map(n => n === mx ? Array.from({ length: mx - mn }, (x, k) => mn + k) : []);
+  return { q: 'The sides of a ' + POLY[a.length] + ' are in the ratio ' + rat11(a) + '. The difference between the shortest side and the longest side is ' + fx(d) + ' cm. Work out the perimeter of the ' + POLY[a.length] + '.', ans: N(fx(P), { unit: 'cm' }),
+    sol: [{ en: 'The shortest side is ' + mn + ' parts and the longest is ' + mx + ' parts, so the difference is ' + mx + ' − ' + mn + ' = ' + (mx - mn) + ' parts (shaded).', svg: svgBars(a.map((n, k) => ({ lab: 'Side ' + (k + 1), n, hl: hl[k] })), { foot: 'shaded = ' + fx(d) + ' cm' }) },
+      { en: 'So one part is ' + fx(d) + ' cm ÷ ' + (mx - mn) + '.', tex: fx(d) + ' \\div ' + (mx - mn) + ' = ' + fx(p) + '\\ \\text{cm}' },
+      { en: 'The perimeter is all the sides together: ' + a.join(' + ') + ' = ' + sum11(a) + ' parts.', tex: sum11(a) + ' \\times ' + fx(p) + ' = ' + fx(P) + '\\ \\text{cm}' }] };
+}
+function rxAngles(a) {   /* the angles of a triangle in the ratio a */
+  const p = 180 / sum11(a), A = a.map(n => n * p);
+  return { q: 'The angles of a triangle are in the ratio ' + rat11(a) + '. Work out the size of each angle.', ans: multi(...a.map((n, k) => ['Angle with ' + pl(n, 'part', 'parts'), N(fx(A[k]), { unit: '°' })])),
+    sol: [{ en: 'The angles of a triangle add up to 180°. The ratio has ' + a.join(' + ') + ' = ' + sum11(a) + ' parts, so share 180° into ' + sum11(a) + ' parts.', tex: '180 \\div ' + sum11(a) + ' = ' + fx(p) },
+      ...a.map((n, k) => ({ en: pl(n, 'part', 'parts') + ':', tex: n + ' \\times ' + fx(p) + ' = ' + fx(A[k]) + '^\\circ' })),
+      { en: 'Check:', tex: A.map(fx).join(' + ') + ' = 180' }] };
+}
+function rxRight(d) {   /* right-angled triangle, the two acute angles differ by d → the ratio of the angles */
+  const x = (90 - d) / 2, y = x + d; const g = [x, y, 90].reduce((u, w) => gcd(u, w)); const R = [x, y, 90].map(v => v / g);
+  return { q: 'In a right-angled triangle, the two acute angles differ by ' + d + '°. Write the ratio of the three angles, from smallest to biggest, in its simplest form.', ans: { k: 'ratio', key: R.join(':') },
+    sol: [{ en: 'The two acute angles add up to 180° − 90° = 90°. Take the difference away and halve what is left to get the smaller angle.', tex: '(90 - ' + d + ') \\div 2 = ' + fx(x) },
+      { en: 'The bigger acute angle is ' + d + '° more:', tex: fx(x) + ' + ' + d + ' = ' + fx(y) },
+      { en: 'The angles are ' + fx(x) + '°, ' + fx(y) + '° and 90°. Divide all three by their highest common factor, ' + g + ':', tex: fx(x) + ' : ' + fx(y) + ' : 90 \;=\; ' + R.join(' : ') }] };
+}
+/* the workbook’s right-angled triangle: two triangles are possible */
+function rxRightBoth(d, part) {
+  const x = (90 - d) / 2, y = x + d, s = 90 - d; const g1 = [x, y, 90].reduce((u, w) => gcd(u, w)), g2 = [d, s, 90].reduce((u, w) => gcd(u, w));
+  const T1 = [x, y, 90], T2 = [Math.min(d, s), Math.max(d, s), 90];
+  const why = [{ en: 'The difference of ' + d + '° can be between the two acute angles, or between the right angle and one of the acute angles. (It cannot be 90° + ' + d + '°, because then two angles would already be more than 180°.)' },
+    { en: 'Case 1: the two acute angles differ by ' + d + '°. Together they make 90°, so the smaller one is (90 − ' + d + ') ÷ 2.', tex: '(90 - ' + d + ') \\div 2 = ' + fx(x) + ', \\quad ' + fx(x) + ' + ' + d + ' = ' + fx(y) },
+    { en: 'Case 2: an acute angle is ' + d + '° less than the right angle. Then the third angle makes the total 180°.', tex: '90 - ' + d + ' = ' + s + ', \\quad 180 - 90 - ' + s + ' = ' + d }];
+  if (part === 'a') return { q: 'In a right-angled triangle, the difference between two of the angles is ' + d + '°. How many different triangles are possible? Work out the angles of each one.',
+    ans: multi(['Number of possible triangles', N(2)], ['Angles when the two acute angles differ by ' + d + '°', { k: 'list', key: T1.join(','), help: L('The three angles, separated by commas') }], ['Angles when the right angle and an acute angle differ by ' + d + '°', { k: 'list', key: T2.join(','), help: L('The three angles, separated by commas') }]), sol: why.concat([{ en: 'So there are two solutions: ' + T1.join('°, ') + '° and ' + T2.join('°, ') + '°.' }]) };
+  return { q: 'The right-angled triangles have angles ' + T1.join('°, ') + '° and ' + T2.join('°, ') + '°. For each one, write the ratio of the angles from smallest to biggest in its simplest form.',
+    ans: multi(['Angles ' + T1.join('°, ') + '°', { k: 'ratio', key: T1.map(v => v / g1).join(':') }], ['Angles ' + T2.join('°, ') + '°', { k: 'ratio', key: T2.map(v => v / g2).join(':') }]),
+    sol: [{ en: 'Divide by the highest common factor of the three angles.', tex: T1.join(' : ') + ' \;=\; ' + T1.map(v => v / g1).join(' : ') + '\\quad (\\div ' + g1 + ')' }, { en: '', tex: T2.join(' : ') + ' \;=\; ' + T2.map(v => v / g2).join(' : ') + '\\quad (\\div ' + g2 + ')' }] };
+}
+topic({ id: '11.1x', sec: '11.1', en: 'Ratio problems with decimals, shapes and angles', ext: true, variants: 4,
+  hints: [
+    'The method does not change with decimals: find one part, then multiply. If one number is 0.03 in the ratio 6 : 5, it could be the 6 parts or the 5 parts.',
+    'In shapes, use what you know about the whole: the sides of a shape make the perimeter, the angles of a triangle add up to 180°. A difference between two sides is a number of parts too.',
+    'For a ratio of angles in simplest form, divide all the angles by their highest common factor: 35 : 55 : 90 = 7 : 11 : 18.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    if (vi === 0) { const a = r.pick([[6, 5], [3, 4], [2, 5], [4, 5], [5, 8], [3, 8], [4, 3], [5, 2]]); const v = dV(a[0] * a[1] * r.pick([1, 2, 3, 4, 5]) / r.pick([100, 1000])); return rxDecimal(a, v); }
+    if (vi === 1) { for (let g = 0; g < 100; g++) { const n = r.pick([3, 4, 4, 5]); const a = r.sh([1, 2, 3, 4, 5, 6, 7, 8]).slice(0, n); const p = r.pick([0.5, 1.25, 1.5, 2.5, 0.75, 3]); const d = dV((Math.max(...a) - Math.min(...a)) * p); if (n === 3 && Math.max(...a) >= sum11(a) - Math.max(...a)) continue; return rxPerimeter(a, d); } }
+    if (vi === 2) { for (let g = 0; g < 100; g++) { const a = r.sh([1, 2, 3, 4, 5, 6, 7]).slice(0, 3); if (180 % sum11(a)) continue; return rxAngles(a); } }
+    return rxRight(r.pick([10, 20, 30, 40, 50, 60, 70, 4, 6, 8, 12, 14, 16, 18, 24, 26, 28, 32, 34, 36]));
+  } });
+
+/* ---------- 11.1y child : staff ratios (a ratio as a limit) ---------- */
+const ACT = [['Horse riding', 4], ['Sailing', 5], ['Rock climbing', 8], ['Canoeing', 10], ['Archery', 6], ['Kayaking', 6], ['Swimming', 12], ['Climbing wall', 8]];
+const staff11 = (n, c) => Math.ceil(n / c);
+function ryOne(act, cap, n) {
+  const s = staff11(n, cap), q = n / cap;
+  return { q: 'For ' + act.toLowerCase() + ' the child : staff ratio is ' + cap + ' : 1 — there can be no more than ' + cap + ' children for each member of staff. ' + n + ' children want to do ' + act.toLowerCase() + '. How many staff are needed?', ans: N(s, { unit: 'staff' }),
+    sol: [{ en: 'Each member of staff can look after up to ' + cap + ' children.', tex: n + ' \\div ' + cap + ' = ' + (Number.isInteger(q) ? q : fx(dV(Math.floor(q * 100) / 100)) + '\\ldots') },
+      { en: Number.isInteger(q) ? 'That is exactly ' + q + ' groups of ' + cap + ', so ' + q + ' staff are enough.' : pl(Math.floor(q), 'member', 'members') + ' of staff can look after only ' + (Math.floor(q) * cap) + ' children, and the other ' + (n - Math.floor(q) * cap) + ' still need someone. Round UP: ' + s + ' staff.' }] };
+}
+function ryTable(rows, ask, S) {   /* rows: [[activity, cap, children]] · ask 'total' (staff needed) or 'move' (fewest children to move when only S staff) */
+  const html = '<table class="pblk tx"><tr><th>Activity</th><th>Child : staff ratio</th><th>Number of children</th></tr>' + rows.map(x => '<tr><td>' + esx11(x[0]) + '</td><td>' + x[1] + ' : 1</td><td>' + x[2] + '</td></tr>').join('') + '</table>';
+  const st = rows.map(x => staff11(x[2], x[1])), tot = sum11(st);
+  const solA = [{ en: 'For each activity divide the children by the ratio and round UP — part of a group still needs a member of staff.' }].concat(rows.map((x, k) => ({ en: x[0] + ': ' + x[2] + ' ÷ ' + x[1] + ' needs ' + st[k] + ' staff (' + st[k] + ' × ' + x[1] + ' = ' + (st[k] * x[1]) + ' places).' })), [{ en: 'Total:', tex: st.join(' + ') + ' = ' + tot }]);
+  if (ask === 'total') return { q: 'The table shows the child : staff ratios for activities at an activity centre (the most children allowed for one member of staff) and the number of children doing each activity on one day. Work out the total number of staff needed on this day.', html, ans: N(tot, { unit: 'staff' }), sol: solA };
+  /* fewest children to move: try every way of keeping or cutting staff */
+  let best = null; const rng = rows.map((x, k) => { const o = []; for (let s = Math.max(0, st[k] - 4); s <= st[k] + 1; s++) o.push(s); return o; });
+  const go = (k, cur) => { if (k === rows.length) { if (sum11(cur) > S) return; const capT = cur.reduce((t, s, j) => t + s * rows[j][1], 0); if (capT < sum11(rows.map(x => x[2]))) return; const mv = cur.reduce((t, s, j) => t + Math.max(0, rows[j][2] - s * rows[j][1]), 0); if (!best || mv < best.mv) best = { mv, cur: cur.slice() }; return; } rng[k].forEach(s => { cur.push(s); go(k + 1, cur); cur.pop(); }); };
+  go(0, []); if (!best) throw new Error('no plan');
+  const out = rows.map((x, j) => Math.max(0, x[2] - best.cur[j] * x[1])); let left = best.mv; const add = rows.map(() => 0);
+  rows.forEach((x, j) => { const room = best.cur[j] * x[1] - x[2] - 0; if (room > 0 && left > 0) { const t = Math.min(room, left); add[j] = t; left -= t; } });
+  const fin = rows.map((x, j) => x[2] - out[j] + add[j]);
+  return { q: 'The table shows the child : staff ratios for activities at an activity centre (the most children allowed for one member of staff) and the number of children doing each activity on one day. Only ' + S + ' staff are available. Some children must move to a different activity so that only ' + S + ' staff are needed. What is the smallest number of children who must move?', html, ans: N(best.mv, { unit: 'children' }),
+    sol: solA.concat([{ en: 'That is ' + pl(tot - S, 'member', 'members') + ' of staff too many. Taking one member of staff away from an activity means moving out the children above the new limit:' }].concat(rows.map((x, j) => ({ en: x[0] + ': with ' + (st[j] - 1) + ' staff at most ' + ((st[j] - 1) * x[1]) + ' children, so ' + Math.max(0, x[2] - (st[j] - 1) * x[1]) + ' must move.' })), [
+      { en: 'The cheapest way: ' + rows.map((x, j) => out[j] ? 'move ' + out[j] + ' out of ' + x[0].toLowerCase() : '').filter(Boolean).join(' and ') + ' — ' + pl(best.mv, 'child', 'children') + ' in all — into activities that still have room without extra staff.' },
+      { en: 'One way to do it: ' + rows.map((x, j) => x[0] + ' ' + fin[j]).join(', ') + '. Staff: ' + rows.map((x, j) => staff11(fin[j], x[1])).join(' + ') + ' = ' + sum11(rows.map((x, j) => staff11(fin[j], x[1]))) + '.' }])) };
+}
+function genStaff(r, ask) {
+  for (let g = 0; g < 300; g++) { const acts = r.sh(ACT).slice(0, 4); const rows = acts.map(a => [a[0], a[1], r.ri(Math.max(8, a[1] * 2 - 3), a[1] * 4 + 2)]); const st = rows.map(x => staff11(x[2], x[1]));
+    if (ask === 'total') return ryTable(rows, 'total');
+    const S = sum11(st) - r.pick([1, 2]); try { const it = ryTable(rows, 'move', S); if (it.ans.key === '0') continue; return it; } catch (e) { continue; } }
+  throw new Error('staff');
+}
+topic({ id: '11.1y', sec: '11.1', en: 'Ratios as limits: children and staff', ext: true, variants: 4,
+  hints: [
+    'A child : staff ratio of 8 : 1 is a LIMIT: at most 8 children for each member of staff. It is not a sharing problem.',
+    'To find the staff needed, divide the children by the ratio and round UP. 30 children at 8 : 1: 30 ÷ 8 = 3.75, so 3 staff are not enough — you need 4.',
+    'To use fewer staff, look at each activity: how many children would have to leave if it had one member of staff less? Move the fewest children, into activities that still have spare places.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    if (vi === 0) { for (let g = 0; g < 50; g++) { const a = r.pick(ACT); const n = r.ri(a[1] + 1, a[1] * 5); if (n % a[1] === 0 && r() < 0.7) continue; return ryOne(a[0], a[1], n); } }
+    if (vi === 1) return genStaff(r, 'total');
+    if (vi === 2) { const a = r.pick(ACT), s = r.ri(2, 6); return { q: 'For ' + a[0].toLowerCase() + ' the child : staff ratio is ' + a[1] + ' : 1. There are ' + s + ' members of staff. What is the largest number of children who can do ' + a[0].toLowerCase() + '?', ans: N(s * a[1], { unit: 'children' }),
+      sol: [{ en: 'Each member of staff can look after up to ' + a[1] + ' children.', tex: s + ' \\times ' + a[1] + ' = ' + (s * a[1]) }, { en: 'One more child would need another member of staff.' }] }; }
+    return genStaff(r, 'move');
+  } });
+
+/* ---------- 11.2x three quantities, and direct proportion with harder numbers ---------- */
+/* m1 workers take d1 days for h1 jobs; the work for one job = m1·d1/h1 worker-days */
+function pxThree(w, m1, d1, h1, job, ask) {
+  const W = dV(m1 * d1 / h1); const intro = 'It takes ' + m1 + ' ' + w + ' ' + d1 + ' days to paint ' + pl(h1, job[0], job[1]) + '.';
+  const sol = [{ en: 'More ' + w + ' or more days → more ' + job[1] + ' painted (direct proportion); more ' + w + ' → fewer days for the same ' + job[1] + ' (inverse proportion). Count the work in “' + w.replace(/s$/, '') + '-days”.' },
+    { en: m1 + ' ' + w + ' working ' + d1 + ' days do ' + (m1 * d1) + ' ' + w.replace(/s$/, '') + '-days of work for ' + pl(h1, job[0], job[1]) + ', so one ' + job[0] + ' needs:', tex: m1 + ' \\times ' + d1 + ' \\div ' + h1 + ' = ' + fx(W) }];
+  if (ask.m != null && ask.d != null) { const h = dV(ask.m * ask.d / W); sol.push({ en: ask.m + ' ' + w + ' for ' + ask.d + ' days do ' + (ask.m * ask.d) + ' ' + w.replace(/s$/, '') + '-days of work:', tex: ask.m + ' \\times ' + ask.d + ' \\div ' + fx(W) + ' = ' + fx(h) });
+    return { q: intro + ' How many ' + job[1] + ' can ' + ask.m + ' ' + w + ' paint in ' + ask.d + ' days?', ans: N(fx(h), { unit: job[1] }), sol }; }
+  if (ask.h != null && ask.d != null) { const m = dV(W * ask.h / ask.d); sol.push({ en: pl(ask.h, job[0], job[1]) + ' need ' + fx(W * ask.h) + ' ' + w.replace(/s$/, '') + '-days; in ' + ask.d + ' days that needs:', tex: fx(W) + ' \\times ' + ask.h + ' \\div ' + ask.d + ' = ' + fx(m) });
+    return { q: intro + ' How many ' + w + ' does it take to paint ' + pl(ask.h, job[0], job[1]) + ' in ' + ask.d + ' days?', ans: N(fx(m), { unit: w }), sol }; }
+  const d = dV(W * ask.h / ask.m); sol.push({ en: pl(ask.h, job[0], job[1]) + ' need ' + fx(W * ask.h) + ' ' + w.replace(/s$/, '') + '-days; shared between ' + ask.m + ' ' + w + ':', tex: fx(W) + ' \\times ' + ask.h + ' \\div ' + ask.m + ' = ' + fx(d) });
+  return { q: intro + ' How many days does it take ' + ask.m + ' ' + w + ' to paint ' + pl(ask.h, job[0], job[1]) + '?', ans: N(fx(d), { unit: 'days' }), sol };
+}
+/* the table of three quantities: rows [[workers, days, jobs]] with null for the gaps */
+function pxTable(w, rows, W, job) {
+  const L0 = 'ABCDEFGH'; let n = 0; const gaps = [];
+  const body = rows.map(rw => '<tr>' + rw.map((v, c) => { if (v == null) { const L = L0[n++]; gaps.push({ L, rw, c }); return '<td class="tdq"><b>' + L + '</b></td>'; } return '<td>' + big(v) + '</td>'; }).join('') + '</tr>').join('');
+  const html = '<table class="pblk tx"><tr><th>' + cap11(w) + '</th><th>Days</th><th>' + cap11(job[1]) + '</th></tr>' + body + '</table>';
+  const sol = [{ en: 'One ' + job[0] + ' needs ' + fx(W) + ' ' + w.replace(/s$/, '') + '-days of work (' + w + ' × days ÷ ' + job[1] + ' is the same in every row).' }];
+  const parts = gaps.map(G => { const [m, d, h] = G.rw; let v, tex;
+    if (G.c === 0) { v = dV(W * h / d); tex = fx(W) + ' \\times ' + h + ' \\div ' + d + ' = ' + fx(v); } else if (G.c === 1) { v = dV(W * h / m); tex = fx(W) + ' \\times ' + h + ' \\div ' + m + ' = ' + fx(v); } else { v = dV(m * d / W); tex = m + ' \\times ' + d + ' \\div ' + fx(W) + ' = ' + fx(v); }
+    sol.push({ en: G.L + ':', tex }); return [G.L, N(fx(v))]; });
+  return { q: 'The table is about ' + w + ' painting ' + job[1] + '. All the ' + w + ' work at the same rate. Work out the missing numbers.', html, ans: parts.length === 1 ? parts[0][1] : multi(...parts), sol };
+}
+function pxBody(h1, b1, ask, v) {   /* head length and body length in direct proportion */
+  const k = b1 / h1;
+  const sol = [{ en: 'Head and body length are in direct proportion, so body length ÷ head length is the same for every adult:', tex: b1 + ' \\div ' + h1 + ' = ' + fx(dV(k)) }];
+  if (ask === 'body') { const b = dV(v * k); sol.push({ en: 'Body length for a head of ' + v + ' cm:', tex: v + ' \\times ' + fx(dV(k)) + ' = ' + fx(b) }); return { q: 'Julio reads that the length of an adult’s head and the length of their body are in direct proportion. His dad has a head length of ' + h1 + ' cm and a body length of ' + b1 + ' cm. Using these measurements, work out the body length of an adult with a head length of ' + v + ' cm.', ans: N(fx(b), { unit: 'cm' }), sol }; }
+  const h = dV(v / k); sol.push({ en: 'Head length for a body of ' + v + ' cm:', tex: v + ' \\div ' + fx(dV(k)) + ' = ' + fx(h) }); sol.push({ en: 'The total height is head + body:', tex: fx(h) + ' + ' + v + ' = ' + fx(dV(h + v)) });
+  return { q: 'Julio reads that the length of an adult’s head and the length of their body are in direct proportion. His dad has a head length of ' + h1 + ' cm and a body length of ' + b1 + ' cm. Using these measurements, work out the total height (head + body) of an adult with a body length of ' + v + ' cm.', ans: N(fx(dV(h + v)), { unit: 'cm' }), sol };
+}
+topic({ id: '11.2x', sec: '11.2', en: 'Proportion with three quantities and harder numbers', ext: true, variants: 4,
+  hints: [
+    'With three quantities, count the work in “worker-days”: 6 painters for 20 days is 120 painter-days. If that paints 4 houses, one house needs 30 painter-days.',
+    'Then any question is one multiplication and one division: 3 painters for 20 days do 60 painter-days, which is 60 ÷ 30 = 2 houses.',
+    'For direct proportion with awkward numbers, find the multiplier as a fraction: 21 ÷ 9 = 7/3, so multiply by 7 and divide by 3.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    for (let g = 0; g < 300; g++) {
+      if (vi <= 1) { const w = r.pick(['painters', 'workers']); const job = w === 'workers' ? ['fence', 'fences'] : ['house', 'houses']; const W = r.pick([10, 12, 15, 20, 24, 30]); const m1 = r.ri(2, 8), h1 = r.ri(2, 6); const d1 = dV(W * h1 / m1); if (!Number.isInteger(d1) || d1 > 40) continue;
+        if (vi === 0) { const t = r.ri(0, 2); const m = r.ri(1, 10), d = r.pick([5, 6, 10, 12, 15, 20, 30, 40, 60]), h = r.ri(1, 8);
+          if (t === 0) { if (!Number.isInteger(m * d / W) || m === m1) continue; return pxThree(w, m1, d1, h1, job, { m, d }); }
+          if (t === 1) { if (!Number.isInteger(W * h / d) || W * h / d > 20 || d === d1) continue; return pxThree(w, m1, d1, h1, job, { h, d }); }
+          if (!Number.isInteger(W * h / m) || W * h / m > 90 || m === m1) continue; return pxThree(w, m1, d1, h1, job, { h, m }); }
+        const rows = [[m1, d1, h1]]; const n = r.ri(2, 3); for (let k = 0; k < n; k++) { const m = r.ri(1, 8), h = r.ri(1, 6); const d = dV(W * h / m); if (!Number.isInteger(d) || d > 120) continue; const c = r.ri(0, 2); const rw = [m, d, h]; rw[c] = null; rows.push(rw); }
+        if (rows.length < 3) continue; return pxTable(w, rows, W, job); }
+      if (vi === 2) { const p = r.pick([3, 4, 6, 7]), q0 = r.ri(2, 9); if (gcd(p, q0) !== 1) continue; const k = q0 / p; const xs = r.sh([p, 2 * p, 3 * p, 4 * p, 5 * p, 1.5 * p].filter(x => Number.isInteger(x))).slice(0, 5); const ys = xs.map(x => dV(x * k)); if (ys.some(y => !Number.isInteger(y * 2))) continue;
+        const cols = r.sh(xs.map((x, c) => c)).slice(0, 3); return ptTable({ kind: 'd', lab: ['X', 'Y'], xs, ys, unk: cols.map((c, j) => [j === 0 ? 0 : 1, c]) }); }
+      const h1 = r.pick([20, 22, 24, 25, 26]), k = r.pick([6, 6.5, 7, 7.5]); const b1 = dV(h1 * k); if (!Number.isInteger(b1)) continue;
+      if (r() < 0.5) { const v = r.pick([20, 21, 22, 23, 24, 25, 26, 27, 28].filter(x => x !== h1)); return pxBody(h1, b1, 'body', v); }
+      const hh = r.pick([20, 21, 22, 23, 24, 25, 26].filter(x => x !== h1)); return pxBody(h1, b1, 'total', dV(hh * k));
+    }
+    throw new Error('11.2x');
+  } });
+
+/* ---------- 11.2y inverse proportion: tables, x × y and graphs ---------- */
+/* a graph of y = K/x with the table’s points and a smooth curve */
+function svgInv(K, xs, xmax, ymax, xl, yl, mark) {
+  const W = 330, H = 236, L0 = 40, T0 = 12, R0 = 12, B0 = 40; const X = x => +(L0 + x / xmax * (W - L0 - R0)).toFixed(1), Y = y => +(T0 + (1 - y / ymax) * (H - T0 - B0)).toFixed(1);
+  const gx = xmax / 14, gy = ymax / 8; let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="gr" role="img" aria-label="graph of inverse proportion">';
+  for (let k = 0; k <= 14; k++) s += '<line x1="' + X(k * gx) + '" y1="' + Y(0) + '" x2="' + X(k * gx) + '" y2="' + Y(ymax) + '" class="gl"/>';
+  for (let k = 0; k <= 8; k++) s += '<line x1="' + X(0) + '" y1="' + Y(k * gy) + '" x2="' + X(xmax) + '" y2="' + Y(k * gy) + '" class="gl"/>';
+  s += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(xmax) + '" y2="' + Y(0) + '" class="ax"/><line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(0) + '" y2="' + Y(ymax) + '" class="ax"/>';
+  for (let k = 0; k <= 14; k += 2) s += '<text class="at" x="' + X(k * gx) + '" y="' + (Y(0) + 15) + '" text-anchor="middle">' + fx(k * gx) + '</text>';
+  for (let k = 0; k <= 8; k += 2) s += '<text class="at" x="' + (X(0) - 6) + '" y="' + (Y(k * gy) + 4) + '" text-anchor="end">' + fx(k * gy) + '</text>';
+  s += '<text class="lb" x="' + ((X(0) + X(xmax)) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esx11(xl) + '</text>';
+  s += '<text class="lb" transform="translate(12,' + ((Y(0) + Y(ymax)) / 2) + ') rotate(-90)" text-anchor="middle">' + esx11(yl) + '</text>';
+  const x0 = Math.max(K / ymax, xmax * 0.02); let d = ''; for (let k = 0; k <= 80; k++) { const x = x0 + (xmax - x0) * k / 80; d += (k ? ' L' : 'M') + X(x) + ' ' + Y(K / x); }
+  s += '<path d="' + d + '" class="pl"/>';
+  xs.forEach(x => { s += '<circle cx="' + X(x) + '" cy="' + Y(K / x) + '" r="3.6" class="idc"/>'; });
+  if (mark != null) s += '<line x1="' + X(mark) + '" y1="' + Y(0) + '" x2="' + X(mark) + '" y2="' + Y(K / mark) + '" class="pl2" stroke-dasharray="4 3"/>';
+  return s + '</svg>';
+}
+const INVC = [{ x: 'Number of sheep', y: 'Number of days', K: 180, xs: [5, 10, 15, 20, 30, 40, 60], xmax: 70, ymax: 40, intro: (x, y) => 'It takes ' + x + ' sheep ' + y + ' days to eat 1 bag of feed.', est: x => 'Use the graph to estimate the number of days it takes ' + x + ' sheep to eat 1 bag of feed.' },
+  { x: 'Number of workers', y: 'Number of hours', K: 120, xs: [4, 6, 8, 10, 12, 15, 20, 24], xmax: 28, ymax: 32, intro: (x, y) => 'It takes ' + x + ' workers ' + y + ' hours to finish a job.', est: x => 'Use the graph to estimate how many hours it takes ' + x + ' workers to finish the job.' },
+  { x: 'Speed (km/h)', y: 'Time (hours)', K: 240, xs: [20, 30, 40, 48, 60, 80, 120], xmax: 140, ymax: 16, intro: (x, y) => 'A journey takes ' + y + ' hours at ' + x + ' km/h.', est: x => 'Use the graph to estimate how many hours the journey takes at ' + x + ' km/h.' }];
+function pyGraph(C, x0) {
+  const v = dV(C.K / x0);
+  return { q: C.intro(C.xs[2], C.K / C.xs[2]) + ' The graph shows the two quantities. ' + C.est(x0), svg: svgInv(C.K, C.xs, C.xmax, C.ymax, C.x, C.y, x0),
+    ans: N(fx(Math.round(v * 10) / 10), { forms: ['approx'], tol: Math.max(0.05, 1.6 * C.ymax / 40 / v), help: L('Your reading from the graph, e.g. <code>26</code>') }),
+    sol: [{ en: 'Go up from ' + x0 + ' on the horizontal axis to the curve (along the dashed line), then across to the vertical axis. You should read about ' + Math.round(v) + '.' },
+      { en: 'You can check with the rule for inverse proportion: x × y is always ' + C.K + ', so y = ' + C.K + ' ÷ ' + x0 + '.', tex: C.K + ' \\div ' + x0 + ' = ' + (Number.isInteger(v * 100) ? fx(v) : texCut(C.K / x0, 2)) }] };
+}
+function pyNotice(C, x1) {
+  x1 = x1 || C.xs[1];
+  return { q: C.intro(x1, C.K / x1) + ' In a table of values for this situation, what do you notice about x × y (the ' + C.x.toLowerCase() + ' × the ' + C.y.toLowerCase() + ')?',
+    ans: MQ(mkRng(C.K + 7), ['It is the same, ' + C.K + ', for every pair of values.', 'It gets bigger as x gets bigger.', 'It gets smaller as x gets bigger.', 'It is different for every pair of values.'], 0),
+    sol: [{ en: 'Multiply some pairs: ' + C.xs.slice(0, 3).map(x => x + ' × ' + fx(dV(C.K / x)) + ' = ' + C.K).join(', ') + '.' }, { en: 'The product is always ' + C.K + '. This is true for any pair of values, because the quantities are in inverse proportion: when x is multiplied by a number, y is divided by the same number, so x × y does not change.' }] };
+}
+function pyLine(C) {
+  return { q: 'For inverse proportion, the points from a table (such as ' + C.x.toLowerCase() + ' and ' + C.y.toLowerCase() + ') are plotted on a grid. Is it possible to draw a straight line through all the points?', svg: svgInv(C.K, C.xs, C.xmax, C.ymax, C.x, C.y),
+    ans: MQ(mkRng(C.K + 3), ['No. The points lie on a curve: each time x doubles, y halves.', 'Yes. Inverse proportion always gives a straight line.', 'Yes, but only if the line goes through (0, 0).', 'No, because the points are not equally spaced.'], 0),
+    sol: [{ en: 'Look at how much y drops for the same step in x: from x = ' + C.xs[0] + ' to ' + C.xs[1] + ' it falls by ' + fx(dV(C.K / C.xs[0] - C.K / C.xs[1])) + ', later steps make it fall less and less. A straight line would fall by the same amount for every equal step.' }, { en: 'So the points lie on a smooth curve that gets flatter, not on a straight line.' }] };
+}
+topic({ id: '11.2y', sec: '11.2', en: 'Inverse proportion: products and graphs', ext: true, variants: 4,
+  hints: [
+    'In inverse proportion x × y is the same for every pair of values. If 20 sheep take 9 days, then x × y = 180, so 5 sheep take 180 ÷ 5 = 36 days.',
+    'The graph of inverse proportion is a curve, not a straight line: it falls steeply at first and then flattens out.',
+    'To read a value from a graph, go up from the x value to the curve, then across to the y-axis. Check your reading with x × y.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3); const C = r.pick(INVC);
+    if (vi === 0) { const xs = C.xs.slice(); const k0 = r.ri(0, xs.length - 1); const cols = r.sh(xs.map((x, c) => c).filter(c => c !== k0)).slice(0, 3); return ptTable({ kind: 'i', lab: [C.x, C.y], xs, ys: xs.map(x => dV(C.K / x)), unk: cols.map(c => [1, c]), q: C.intro(xs[k0], C.K / xs[k0]) }); }
+    if (vi === 1) return pyNotice(C);
+    if (vi === 2) { for (let g = 0; g < 50; g++) { const x0 = r.ri(Math.ceil(C.K / C.ymax) + 1, Math.floor(C.xmax * 0.6)); if (C.xs.includes(x0)) continue; return pyGraph(C, x0); } }
+    return pyLine(C);
+  } });
+
+/* =====================================================================================================================
+   THE WORKBOOK'S OWN QUESTIONS — built from the book's numbers by the same builders (used by m_school.js: WBD(…, 'r11', …))
+   ===================================================================================================================== */
+/* several single questions about one situation as one question with parts (the workbook's a, b, c …); repeated explanations are shown once */
+function combo11(intro, parts) {
+  const seen = new Set(), sol = [];
+  parts.forEach(([lab, it]) => { sol.push({ en: lab }); it.sol.forEach(st => { const k = (st.en || '') + '|' + (st.tex || '') + '|' + (st.m || ''); if (st.en && seen.has(st.en) && !st.tex && !st.svg) return; if (seen.has(k)) return; seen.add(k); if (st.en) seen.add(st.en); sol.push(st); }); });
+  return { q: intro + ' Answer each part.', ans: multi(...parts.map(([lab, it]) => [lab, it.ans])), sol };
+}
+const ml11 = (q, opts, c, why) => ({ q, ans: MQ(mkRng(q.length * 7 + c), opts, c), sol: [{ en: why }, { en: 'So: ' + opts[c].toLowerCase() + '.' }] });
+const R11B = {
+  two: (ctx, nm, a, i, v, ask) => rsTwo(CTX2[ctx](null, nm), a, i, v, ask),
+  three: (ctx, nm, a, i, v, ask) => rsThree(CTX3[ctx](null, nm), a, i, v, ask),
+  mistake: (nm, a, i, v, who, err) => rsMistake(CTX3.spend(null, nm), a, i, v, who, err),
+  diff: (ctx, nm, a, mode, v, ask) => rsDiff(CTX2[ctx](null, nm), a, mode, v, ask),
+  ways: (a, v) => rsTwoWays(a, v, 'num', 'list'),
+  limit: (ctx, nm, a, lim, ask) => rsLimit(CTXL[ctx](null, nm), a, lim, ask),
+  dec: (a, v) => rxDecimal(a, v),
+  per: (a, d) => rxPerimeter(a, d),
+  right: (d, part) => rxRightBoth(d, part),
+  staff: (rows, ask, S) => ryTable(rows, ask, S),
+  rate: (ctx, nm, x1, y1, xs, kind) => dpRate(CTXD[ctx](null, nm), x1, y1, xs, kind),
+  recipe: (name, n1, ings, n2s, picks) => dpRecipe(name, n1, ings, n2s, picks),
+  work: (J, k1, t1, ask) => ipWork(J, k1, t1, ask),
+  speed: (M, t1, s1, ask) => ipSpeed(M, t1, s1, ask),
+  run: (F, t1, m, faster) => ipRun(F, t1, m, faster),
+  ml: (q, opts, c, why) => ml11(q, opts, c, why),
+  kind: (q, k, why) => pcKind({ k, pair: q, why }, true, q),
+  train: (who, T, P, P2, A, B) => pcTrain(who, T, P, P2, A, B),
+  table: o => ptTable(o),
+  work3: (w, m1, d1, h1, job, ask) => pxThree(w, m1, d1, h1, job, ask),
+  table3: (w, rows, W, job) => pxTable(w, rows, W, job),
+  body: (h1, b1, ask, v) => pxBody(h1, b1, ask, v),
+  notice: x1 => pyNotice(INVC[0], x1),
+  graph: x0 => pyGraph(INVC[0], x0),
+  line: () => pyLine(INVC[0]),
+  combo: (intro, parts) => combo11(intro, parts.map(p => [p[0], R11B[p[1]](...p.slice(2))]))
+};
+
 /* ===================== NOTES FOR EACH CHAPTER (short reference; the detailed "Key idea" texts live with each topic) ===================== */
-const nt = (h, p, ex) => ({ h: L(h), p: p.map(x => L(x)), ex: ex || [] });
+const nt = (h, p, ex, svg) => ({ h: L(h), p: p.map(x => L(x)), ex: ex || [], svg });
 const MTHEORY = {
   m1: [
     nt('Rational and irrational numbers', [
@@ -4099,7 +5071,49 @@ const MTHEORY = {
       'Why: dividing by one quarter asks how many quarters fit — four times as many as the number. Dividing by three quarters groups those quarters in threes.'], ['12÷(3/4)=12*(4/3)', '(3/4)÷(4/5)=(3/4)*(5/4)']),
     nt('Making calculations easier', [
       'Change fractions and decimals into the same type, choosing whichever makes the numbers easier.',
-      'Numbers can be multiplied in any order, so start with a pair that gives a whole number.'], ['1.5*12=18', '0.44*25=11', '1.6*(5/8)=1'])]
+      'Numbers can be multiplied in any order, so start with a pair that gives a whole number.'], ['1.5*12=18', '0.44*25=11', '1.6*(5/8)=1'])],
+  /* chapter 11 is new to Marta (not taught at school yet): the notes start from the beginning and explain why each step works */
+  m11: [
+    nt('What a ratio means', [
+      'A ratio compares amounts. The ratio 2 : 3 (say “2 to 3”) means: for every 2 equal parts of the first thing there are 3 equal parts of the second thing.',
+      'The order matters. If flour and butter are in the ratio 2 : 1, the 2 belongs to the flour and the 1 belongs to the butter.',
+      'Draw a ratio as a bar model: one row of boxes for each thing, and every box the same size. Each box is one part.'], [],
+      svgBars([{ lab: 'Flour', n: 2 }, { lab: 'Butter', n: 1 }], {})),
+    nt('Sharing when you know one share', [
+      'Step 1: find the share you are told about and count its boxes. Step 2: divide to find ONE part. Step 3: multiply one part by the number of boxes you need.',
+      'Example: Tina and Kim share some money in the ratio 5 : 2, and Tina gets \\$65. Tina’s 5 boxes are \\$65, so one box is \\$13. Kim has 2 boxes, so Kim gets \\$26. Altogether there are 7 boxes, so they share \\$91.',
+      'Why it works: all the boxes are the same size, so dividing by the number of boxes gives the size of one box.'], ['65÷5=13', '2*13=26', '7*13=91'],
+      svgBars([{ lab: 'Tina', n: 5, note: '$65', k: true }, { lab: 'Kim', n: 2, note: '$26' }], { part: '13' })),
+    nt('Ratios with three shares', [
+      'The method is the same. 1 : 2 : 3 is three rows of boxes: 1 box, 2 boxes and 3 boxes.',
+      'If Benji has the 2 boxes and pays \\$24, one box is \\$12. The total is 1 + 2 + 3 = 6 boxes, so the bill is \\$72.',
+      'Be careful: divide by the number of boxes of the share you were told about — not by the first number of the ratio. And add the numbers of the ratio carefully: 4 + 7 + 5 = 16.'], ['24÷2=12', '6*12=72']),
+    nt('When you know the difference or the total', [
+      'Difference: in the ratio 4 : 5 the second share has 5 − 4 = 1 box more. If the second person gets \\$15 more, that one extra box is \\$15.',
+      'Total: the ratio 4 : 5 has 4 + 5 = 9 boxes. If the total is \\$135, one box is \\$135 ÷ 9 = \\$15.',
+      'Then multiply as usual: 4 boxes are \\$60 and 5 boxes are \\$75.'], ['135÷9=15', '4*15=60', '5*15=75'],
+      svgBars([{ lab: 'Zosia', n: 4, note: '$60' }, { lab: 'Abie', n: 5, note: '$75', hl: [4] }], { part: '15', foot: 'the shaded box = the $15 difference' })),
+    nt('Two possible answers', [
+      'If you are told “one of the numbers is 12” but not WHICH one, try both: 12 could be either share.',
+      'Ratio 3 : 4. If 12 is the 3 boxes, one box is 4 and the other number is 16. If 12 is the 4 boxes, one box is 3 and the other number is 9. Both answers are right.'], ['12÷3=4', '4*4=16', '12÷4=3', '3*3=9']),
+    nt('The most you can make', [
+      'When some ingredients are limited, each of them gives a largest possible part: the amount you have ÷ its number in the ratio.',
+      'The SMALLEST of these is the size of one part — any bigger and that ingredient would run out. Then multiply as usual.'], ['2250÷4=562.5', '2750÷5=550']),
+    nt('Direct proportion', [
+      'Two quantities are in direct proportion when they change in the same ratio: double one and the other doubles; halve one and the other halves.',
+      'Examples: the number of bags of peanuts and the total cost; the minutes Sam types and the number of words; the number of biscuits and the flour they need.',
+      'Method: do the same to both quantities. 1 minute gives 40 words, so (× 3 on both sides) 3 minutes give 120 words. If you are not told about ONE of something, find it first — the unitary method: 5 notebooks cost \\$8.50, so 1 notebook costs \\$1.70.'], ['40*3=120', '8.5÷5=1.7']),
+    nt('Inverse proportion', [
+      'Two quantities are in inverse proportion when one goes up as the other goes down in the same ratio: double one and the other halves.',
+      'Examples: the number of people doing a job and the time it takes; the speed and the time for the same journey; the number of people sharing a fixed cost and the cost for each person.',
+      'What stays the same is the product: 2 people × 6 days = 12 days of work for one person. So 1 person takes 12 days, and 4 people take 12 ÷ 4 = 3 days.',
+      'With arrows: when you divide one quantity by a number, MULTIPLY the other by the same number (and the other way round).'], ['2*6=12', '12÷4=3']),
+    nt('Direct, inverse or neither?', [
+      'Test it by doubling the first quantity. If the second one doubles too, it is direct proportion. If the second one halves, it is inverse proportion.',
+      'Some quantities are not in proportion at all: a train takes the same time with 60 or with 120 people on board. Check that one quantity really depends on the other before you multiply or divide.']),
+    nt('Tables and graphs', [
+      'In a table of direct proportion, y ÷ x is the same for every pair of values. On a graph the points lie on a straight line through (0, 0).',
+      'In a table of inverse proportion, x × y is the same for every pair of values. On a graph the points lie on a curve that gets flatter and flatter — never a straight line.'], ['21÷9=7/3', '20*9=180'])]
 };
 
 /* ===================== Workbook questions: tasks taken from the school workbook ===================== */
@@ -4129,6 +5143,7 @@ const WB_DIRECT = {
   div: p => wbTidy(frB_div(wbF(p[0]), wbF(p[1])).it),
   br: p => wbTidy(frB_brackets(wbF(p[0]), wbF(p[1]), wbF(p[2]), !!p[3], !!p[4]).it),
   ord: p => wbTidy(frB_order(wbF(p[0]), wbF(p[1]), wbF(p[2]), p[3], !!p[4], !!p[5]).it),
+  r11: p => R11B[p[0]](...p.slice(1)),
   prob: p => wbTidy(p[0] === 'tri' ? frB_tri(wbF(p[1]), wbF(p[2]), wbF(p[3])).it : frB_mass(p[1], p[2], p[3], wbF(p[4]), wbF(p[5]), wbF(p[6])).it)
 };
 function WBS(id, sk, ref, en, vis, origs) { const T0 = wbTopic(sk); return wbq({ id, sk, ref, en, sets: origs.map(o => ({ v: o[0], s: o[1] })), vary: r => ({ v: pk(r, vis), s: r.ri(1, 2147483646) }), make: p => T0.gen(mkRng(p.s), p.v) }); }
@@ -4229,6 +5244,24 @@ WBS('w8.5.1', '8.5a', "Exercise 8.5 · Q1, Q2", "Mixing fractions and decimals",
 WBS('w8.5.3', '8.5b', "Exercise 8.5 · Q3, Q4, Q6, Q7", "Choosing an easy order", [0,1,2], [[0,13],[0,269],[0,329],[1,487],[2,8],[1,547],[2,7],[1,181],[1,105]]);
 WBS('w8.5.5', '8.5c', "Exercise 8.5 · Q5, Q8, Q9", "Areas and volumes with decimals and fractions", [0,1,2], [[0,146],[1,7],[2,6],[2,1]]);
 WBS('w8.5.10', '8.5x', "Exercise 8.5 · Q10–Q13", "Harder calculations", [0,1,2,3], [[3,449],[0,12],[1,7],[1,1],[1,2],[2,27],[2,1]]);
+WBD('w11.1.1', '11.1a', "Exercise 11.1 · Q1, Q2, Q3", "Sharing in a ratio when you know one share", [0,1,2], 'r11', [["two","pastry",["Franco"],[2,1],0,250,"both"],["two","drink",null,[4,3],1,450,"both"],["two","money",["Tina","Kim"],[5,2],0,65,"total"]]);
+WBD('w11.1.5', '11.1a', "Exercise 11.1 · Q5, Q6", "Sweets and a vegetable pie", [0,1,2], 'r11', [["two","sweets",["Ahmad","Alicia"],[2,3],0,14,"both"],["two","pie",null,[5,3],0,300,"both"]]);
+WBD('w11.1.4', '11.1b', "Exercise 11.1 · Q4, Q7, Q9", "Ratios with three shares", [0,1,2], 'r11', [["three","bill",["Abdul","Benji","Caen"],[1,2,3],1,24,"all"],["three","pens",null,[2,5,8],2,24,"all"],["three","paint3",["Bikka"],[2,5,6],1,250,"total"]]);
+WBD('w11.1.8', '11.1b', "Exercise 11.1 · Q8", "Find the mistake in Rohan’s homework", [3], 'r11', [["mistake",["Sion"],[4,7,5],2,40,"Rohan","both"]]);
+WBD('w11.1.10', '11.1c', "Exercise 11.1 · Q10", "Using the difference between two shares", [0,1], 'r11', [["diff","money",["Zosia","Abie"],[4,5],"diff",15,"all"]]);
+WBD('w11.1.11', '11.1d', "Exercise 11.1 · Q11", "Two possible values", [0,1,2], 'r11', [["ways",[3,4],12]]);
+WBD('w11.1.12', '11.1e', "Exercise 11.1 · Q12", "As much iced drink as possible", [0,2], 'r11', [["limit","iced",["Mia"],[1,4,5],[null,2250,2750],"each"]]);
+WBD('w11.1.13', '11.1x', "Exercise 11.1 · Q13, Q14, Q15", "Decimals, a quadrilateral and a right-angled triangle", [0,1,2,3], 'r11', [["dec",[6,5],0.03],["per",[2,3,5,8],7.5],["right",20,"a"],["right",20,"c"]]);
+WBD('w11.1.16', '11.1y', "Exercise 11.1 · Q16", "Children and staff at an activity centre", [1,3], 'r11', [["staff",[["Horse riding",4,22],["Sailing",5,17],["Rock climbing",8,30],["Canoeing",10,26]],"total"],["staff",[["Horse riding",4,22],["Sailing",5,17],["Rock climbing",8,30],["Canoeing",10,26]],"move",15]]);
+WBD('w11.2.1', '11.2a', "Exercise 11.2 · Q1, Q2", "Words a minute and the cost of peanuts", [0,1,3], 'r11', [["rate","typing",["Sam"],1,40,[2,3,4],true],["rate","peanuts",null,1,2.2,[2,3,4],true]]);
+WBD('w11.2.3', '11.2b', "Exercise 11.2 · Q3, Q5", "More people, less time", [0,1,2], 'r11', [["combo","It takes 2 people 6 days to build a wall.",[["When there are more people, does the job take more or less time?","ml","With more people, does the job take more or less time?",["More time","Less time"],1,"More people share the same work, so each person has less to do and the wall is finished sooner."],["When there are fewer people, does the job take more or less time?","ml","With fewer people, does the job take more or less time?",["More time","Less time"],0,"Fewer people share the same work, so each person has more to do and the job takes longer."],["How long does it take one person to build the wall?","work",{"who":["person","people"],"verb":"build a wall","obj":"build the wall","tu":["day","days"]},2,6,{"k2":1}],["How long does it take 4 people to build the wall?","work",{"who":["person","people"],"verb":"build a wall","obj":"build the wall","tu":["day","days"]},2,6,{"k2":4}],["Are the number of people and the number of days in direct or inverse proportion?","kind","Are the number of people and the number of days to build the wall in direct or inverse proportion?","i","Twice as many people take half the time: when one is multiplied by 2, the other is divided by 2. That is inverse proportion."]]],["combo","It takes 4 people 7 hours to build a shed.",[["How long does it take 2 people to build the shed?","work",{"who":["person","people"],"verb":"build a shed","obj":"build the shed","tu":["hour","hours"]},4,7,{"k2":2}],["How long does it take 8 people to build the shed?","work",{"who":["person","people"],"verb":"build a shed","obj":"build the shed","tu":["hour","hours"]},4,7,{"k2":8}],["How many people are needed to build the shed in 1 hour?","work",{"who":["person","people"],"verb":"build a shed","obj":"build the shed","tu":["hour","hours"]},4,7,{"t2":1}]]]]);
+WBD('w11.2.4', '11.2c', "Exercise 11.2 · Q4, Q7", "Speed and time", [0,1,2], 'r11', [["combo","Jess runs from her house to the bus stop in 60 seconds.",[["When she runs faster, does it take her more or less than 60 seconds?","ml","When Jess runs faster, does it take her more or less than 60 seconds?",["More than 60 seconds","Less than 60 seconds"],1,"Running faster, she covers the same distance in less time."],["When she runs slower, does it take her more or less than 60 seconds?","ml","When Jess runs slower, does it take her more or less than 60 seconds?",["More than 60 seconds","Less than 60 seconds"],0,"Running slower, she needs more time for the same distance."],["Jess runs twice as fast. How long does it take her (in seconds)?","run","Jess",60,2,true],["Jess runs half as fast. How long does it take her (in seconds)?","run","Jess",60,2,false],["Are her speed and the time it takes in direct or inverse proportion?","kind","Are the speed Jess runs and the time it takes her in direct or inverse proportion?","i","Twice as fast takes half the time: the speed is multiplied by 2 and the time is divided by 2. That is inverse proportion."]]],["combo","It takes Hank 6 hours to drive a certain distance at an average speed of 80 km/h.",[["How long does it take at an average speed of 160 km/h?","speed","Hank",6,80,{"s2":160}],["How long does it take at an average speed of 40 km/h?","speed","Hank",6,80,{"s2":40}],["How long does it take at an average speed of 120 km/h?","speed","Hank",6,80,{"s2":120}],["It takes Hank 8 hours to drive the same distance. What is his average speed?","speed","Hank",6,80,{"t2":8}]]]]);
+WBD('w11.2.6', '11.2a', "Exercise 11.2 · Q6", "Honey biscuits", [2], 'r11', [["recipe","Honey biscuits",25,[["butter",50,"g"],["icing sugar",75,"g"],["flour",75,"g"],["honey",100,"mL"]],[50,75,100],[0,2,3]]]);
+WBD('w11.2.8', '11.2e', "Exercise 11.2 · Q8", "Sharing the rent: complete the table", [1,3], 'r11', [["table",{"kind":"i","lab":["Number of students","Cost per student ($)"],"xs":[5,2,3,4,6,7,8],"ys":[240,600,400,300,200,171.42857142857142,150],"unk":[[1,1],[1,2],[1,3],[1,4],[1,5],[1,6]],"q":"The cost to rent a student house is a set price. Up to 8 students can live in the house. When 5 students rent the house, the cost per student is \\$240 per month."}]]);
+WBD('w11.2.9', '11.2b', "Exercise 11.2 · Q9, Q10", "Packing boxes and digging a hole", [1,3], 'r11', [["work",{"who":["person","people"],"verb":"pack 20 boxes in a factory","obj":"pack 20 boxes","tu":["hour","hours"]},4,1,{"k2":3,"hm":true}],["work",{"who":["person","people"],"verb":"dig a hole","obj":"dig the hole","tu":["day","days"]},8,5,{"k2":10}]]);
+WBD('w11.2.11', '11.2d', "Exercise 11.2 · Q11", "Zara and the train", [2], 'r11', [["train","Zara",20,60,120,"Pembroke","Tenby"]]);
+WBD('w11.2.12', '11.2x', "Exercise 11.2 · Q12, Q13, Q14", "Harder direct proportion and three quantities", [0,1,2,3], 'r11', [["table",{"kind":"d","lab":["X","Y"],"xs":[9,6,15,21,7.5],"ys":[21,14,35,49,17.5],"unk":[[1,1],[0,2],[1,3],[0,4]]}],["body",24,156,"body",26],["body",24,156,"total",143],["work3","men",6,20,4,["house","houses"],{"m":3,"d":20}],["work3","men",6,20,4,["house","houses"],{"h":4,"d":10}],["work3","men",6,20,4,["house","houses"],{"h":4,"m":8}],["table3","men",[[6,20,4],[1,null,4],[1,null,1],[6,60,null],[4,60,null]],30,["house","houses"]]]);
+WBD('w11.2.15', '11.2y', "Exercise 11.2 · Q15", "Sheep and a bag of feed", [0,1,2,3], 'r11', [["table",{"kind":"i","lab":["Number of sheep (x)","Number of days (y)"],"xs":[5,10,15,20,30,40,60],"ys":[36,18,12,9,6,4.5,3],"unk":[[1,0],[1,1],[1,2],[1,4],[1,5],[1,6]],"q":"It takes 20 sheep 9 days to eat 1 bag of feed."}],["notice",20],["line"],["graph",7]]);
 
 /* ===================== EXTRAS: report to tutor, settings, export/import, PWA ===================== */
 function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
@@ -4325,7 +5358,7 @@ function importProgress(f) {
 }
 
 /* ---------- PWA ---------- */
-const APP_VERSION = '20261120-1310';
+const APP_VERSION = '20261120-1837';
 function isStandalone() { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.__installEvt = e; });
 /* no service worker: the app is one self-contained file and makes no network requests */
@@ -4345,19 +5378,25 @@ const readyNote = r => 'topics ' + r.m + '/' + r.n + ' · workbook ' + r.sd + '/
 /* ---------- plan by days until the last exam ---------- */
 function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 const PLAN_SUBJ = () => SUBJECTS.filter(s => !s.soon && daysTo(EXD[s.id]) >= 0).map(s => s.id);
+/* chapters that are new to the student: their topics are spread evenly over the days (about one a day, second in the day's list)
+   instead of all coming at the end in chapter order */
+const SPREAD = ['m11'];
 function planBuild(from, exclude) {
-  const cap0 = Math.max(3, Math.round(GOAL() / 3)); const subs = PLAN_SUBJ(); const rem = {};
-  subs.forEach(s => rem[s] = SKILLS.filter(k => k.subj === s && !isM(k.id) && !(exclude && exclude.has(k.id))));
+  const cap0 = Math.max(3, Math.round(GOAL() / 3)); const subs = PLAN_SUBJ(); const rem = {}, spr = {};
+  subs.forEach(s => { const all = SKILLS.filter(k => k.subj === s && !isM(k.id) && !(exclude && exclude.has(k.id))); spr[s] = all.filter(k => SPREAD.includes(k.ch)); rem[s] = all.filter(k => !SPREAD.includes(k.ch)); });
   const last = Math.max(...subs.map(s => daysTo(EXD[s])), 0); const out = []; const t0 = today0();
   for (let i = from; i <= last; i++) {
     const d = addDays(t0, i); const exams = subs.filter(s => daysTo(EXD[s]) === i); const mocks = subs.filter(s => daysTo(EXD[s]) === i + 1);
     let cap = cap0 - (mocks.length ? 2 : 0) - (exams.length ? Math.ceil(cap0 / 2) : 0); cap = Math.max(exams.length ? 0 : 1, cap);
-    const cand = subs.filter(s => daysTo(EXD[s]) > i + 1 && rem[s].length).map(s => ({ s, u: rem[s].length / Math.max(1, daysTo(EXD[s]) - i - 1) })).sort((a, b) => b.u - a.u).slice(0, 3);
+    const cand = subs.filter(s => daysTo(EXD[s]) > i + 1 && rem[s].length + spr[s].length).map(s => ({ s, u: (rem[s].length + spr[s].length) / Math.max(1, daysTo(EXD[s]) - i - 1) })).sort((a, b) => b.u - a.u).slice(0, 3);
     const items = []; const U = cand.reduce((t, c) => t + c.u, 0); let left = cap;
-    cand.forEach((c, j) => { let q = j === cand.length - 1 ? left : Math.max(1, Math.round(cap * c.u / U)); q = Math.min(q, left, rem[c.s].length); if (q > 0) { items.push({ s: c.s, sk: rem[c.s].splice(0, q) }); left -= q; } });
+    cand.forEach((c, j) => { let q = j === cand.length - 1 ? left : Math.max(1, Math.round(cap * c.u / U)); q = Math.min(q, left, rem[c.s].length + spr[c.s].length); if (q > 0) {
+      const nS = Math.min(q, spr[c.s].length, Math.ceil(spr[c.s].length / Math.max(1, daysTo(EXD[c.s]) - i - 1)));
+      const take = rem[c.s].splice(0, q - nS); let sp = spr[c.s].splice(0, nS); if (take.length + sp.length < q) sp = sp.concat(spr[c.s].splice(0, q - take.length - sp.length));
+      items.push({ s: c.s, sk: take.slice(0, 1).concat(sp, take.slice(1)) }); left -= take.length + sp.length; } });
     out.push({ d, i, items, mocks, exams });
   }
-  const behind = {}; subs.forEach(s => { if (rem[s].length) behind[s] = rem[s].length; });
+  const behind = {}; subs.forEach(s => { if (rem[s].length + spr[s].length) behind[s] = rem[s].length + spr[s].length; });
   return { days: out, behind };
 }
 function todayPlan() {
@@ -4759,7 +5798,7 @@ const IC = {
 const ico = (k, cls) => '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + IC[k] + '</svg>';
 const EXD = { math: '2026-11-30' };
 /* if the exam date ever changes: raise EXD_VER — only today's plan and today's auto goal are recalculated; progress, history and reports stay */
-const EXD_VER = 3;   /* 2: the exam moved from 24 to 30 November · 3: chapter 6 removed from the course */
+const EXD_VER = 4;   /* 2: the exam moved from 24 to 30 November · 3: chapter 6 removed from the course · 4: chapter 11 added */
 /* a saved test that uses a chapter which is no longer in the course cannot be rebuilt: it is closed (an unfinished one with a message); its score, if finished, stays in the history */
 function checkCurExam() { const c = DB.cur; if (!c || !Array.isArray(c.chs)) return; const chs = c.chs.map(x => typeof x === 'number' ? 'm' + x : x);
   if (chs.every(x => CHAPTERS.some(k => k.id === x)) && (c.pick || []).every(p => SKILLS.some(s => s.id === p[1]))) return;
@@ -4949,7 +5988,7 @@ function cheatSheet() {
   let h = '<div class="shhead"><h3>' + esc(sk.en) + '</h3><span class="ru">' + esc(sk.sec + ' · ' + (SECTIONS[sk.sec] || '')) + '</span></div>';
   h += '<div class="chsec"><b class="chl">Key idea</b>' + sk.hints.map(x => '<p>' + tr(x) + '</p>').join('') + '</div>';
   if (ex && ex.sol && ex.sol.length) h += '<div class="chsec"><b class="chl">Worked example</b><div class="instr">' + tr(ex.q) + '</div>' + promptHtml(ex) + '<div class="fb info">' + solHtml(ex) + '</div></div>';
-  h += '<details class="chsec"><summary><b class="chl">All notes for chapter ' + ch.num + '</b></summary>' + (TH[ch.id] || []).map(b => '<details><summary>' + NM(b.h) + '</summary>' + b.p.map(p => '<p>' + tr(p) + '</p>').join('') + (b.ex && b.ex.length ? '<div class="ex">' + b.ex.map(e => '<div>' + K(mi(e)) + '</div>').join('') + '</div>' : '') + '</details>').join('') + '</details>';
+  h += '<details class="chsec"><summary><b class="chl">All notes for chapter ' + ch.num + '</b></summary>' + (TH[ch.id] || []).map(b => '<details><summary>' + NM(b.h) + '</summary>' + b.p.map(p => '<p>' + tr(p) + '</p>').join('') + (b.svg ? '<div class="svgw">' + b.svg + '</div>' : '') + (b.ex && b.ex.length ? '<div class="ex">' + b.ex.map(e => '<div>' + K(mi(e)) + '</div>').join('') + '</div>' : '') + '</details>').join('') + '</details>';
   h += '<button class="btn primary wide" onclick="closeSheet()">Got it, back to the question</button>';
   openSheet(h, 'tall theory');
 }
@@ -5068,6 +6107,7 @@ function solHtml(it) {
   return '<div class="sol">' + (it.sol || []).map(s => {
     let h = '<div class="stp">';
     if (s.en) h += '<div>' + tr(s) + '</div>';
+    if (s.svg) h += '<div class="svgw">' + s.svg + '</div>';
     if (s.m) h += '<div class="mth">' + K(mi(s.m) + (s.u ? '\\;\\text{' + s.u.replace(/%/g, '\\%').replace(/²/g, '$^2$').replace(/³/g, '$^3$') + '}' : '')) + '</div>';
     if (s.tex) h += '<div class="mth">' + K(s.tex) + '</div>';
     return h + '</div>';
@@ -5211,7 +6251,7 @@ function viewChapter(ch) {
 }
 
 function theoryHtml(ch, open1, title) {
-  return '<section class="card theory" id="thBox"><h3>' + title + '</h3><p class="syn">Tap a heading to open it.</p>' + (TH[ch] || []).map((b, i) => '<details' + (open1 && i === 0 ? ' open' : '') + '><summary>' + NM(b.h) + '</summary>' + b.p.map(p => '<p>' + tr(p) + '</p>').join('') + (b.ex && b.ex.length ? '<div class="ex">' + b.ex.map(e => '<div>' + K(mi(e)) + '</div>').join('') + '</div>' : '') + '</details>').join('') + '</section>';
+  return '<section class="card theory" id="thBox"><h3>' + title + '</h3><p class="syn">Tap a heading to open it.</p>' + (TH[ch] || []).map((b, i) => '<details' + (open1 && i === 0 ? ' open' : '') + '><summary>' + NM(b.h) + '</summary>' + b.p.map(p => '<p>' + tr(p) + '</p>').join('') + (b.svg ? '<div class="svgw">' + b.svg + '</div>' : '') + (b.ex && b.ex.length ? '<div class="ex">' + b.ex.map(e => '<div>' + K(mi(e)) + '</div>').join('') + '</div>' : '') + '</details>').join('') + '</section>';
 }
 /* ---------- what next after a skill / chapter is mastered ---------- */
 const isM = id => !!(DB.sk[id] || {}).m;
@@ -5289,6 +6329,7 @@ function renderPractice() {
   h += '<section class="card q">';
   if (sc) { const [d, n] = scCount(scOf(ch.id)); h += '<div class="schead"><span class="pill b">' + (sc.ext ? 'Challenge · workbook' : 'Workbook question') + '</span> <b>' + esc(sc.en) + '</b><div class="meta">' + esc(sc.src.en) + ' · ' + (P.orig >= 0 ? (sc.sets.length > 1 ? 'from the workbook: part ' + (P.orig + 1) + ' of ' + sc.sets.length : 'from the workbook') : 'new numbers') + (sc.ext ? '' : ' · done in this chapter: ' + d + ' of ' + n) + (scDone(sc) ? ' · already done ✓' : '') + '</div></div>'; }
   if (P.target === 'plan') { const ps = planState(); h += '<div class="planchip">' + ico('cal') + '<span>' + (ps.tp.sk.includes(sk.id) ? 'Today’s plan: ' + (ps.tp.sk.indexOf(sk.id) + 1) + ' of ' + ps.tot : 'Extra topic') + '</span></div>'; }
+  if (!sc && SPREAD.includes(sk.ch) && !(DB.sk[sk.id] || {}).a && !P.done) h += '<div class="newtip">' + ico('books') + '<span><b>New topic.</b> Tap <b>Notes</b> for the rule and a worked example before you start.</span></div>';
   h += '<div class="qhead"><span>' + sk.code + ' · ' + NM(sk) + (sk.ext ? ' <b class="ext">Challenge</b>' : '') + '</span><span>' + ((it.calc || sk.calc) ? '<span class="nocalc calc">Calculator</span> ' : '') + dotsHtml(sk.id) + '</span></div>';
   h += '<div class="instr">' + tr(it.q) + '</div>' + promptHtml(it);
   h += '<div class="ansbox">';
