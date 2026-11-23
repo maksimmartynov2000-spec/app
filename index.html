@@ -298,6 +298,8 @@ table.pblk tr>:last-child{border-right:0}table.pblk tr:last-child>*{border-botto
 table.pblk th{color:var(--muted);font-weight:500;background:var(--chip);font-size:13.5px;white-space:normal;max-width:150px}
 table.pblk.tx{font-family:inherit;font-size:15.5px;font-variant-numeric:tabular-nums}table.pblk.tx td{line-height:1.35}
 table.pblk.nohead th{font-size:15.5px;color:var(--ink)}
+@media (max-width:430px){table.pblk.nohead th{font-size:14px;max-width:112px}}
+@media (max-width:340px){table.pblk th,table.pblk td{padding:4px 3px}table.pblk.tx{font-size:13.5px}table.pblk.nohead th{font-size:13px;max-width:96px}}
 table.pblk td.pb,table.pblk td.tdq{background:var(--accent-soft)}
 table.pblk tr.pr td{background:var(--warn-soft)}
 /* algebra wall: every brick stands on two bricks */
@@ -3531,6 +3533,151 @@ topic({ id: '4.3x', sec: '4.3', en: 'Writing and using inequalities', ext: true,
     return { q: 'You are given that $z > ' + z0 + '$. Find the missing number.', tex: texE + ' > \\square', ans: N(val), sol: ['Build the expression one step at a time, doing the same to both sides of the inequality.'].concat(steps) };
   } });
 
+/* ===================== CHAPTER 6 · STATISTICAL INVESTIGATIONS (6.1 and 6.2) ===================== */
+chapter(6, 'Statistical investigations');
+section('6.1', 'Data collection and sampling');
+section('6.2', 'Bias');
+
+/* investigations: what is studied, things that could affect it, things that could not, a question, a prediction, and ways to collect the data */
+const STI = [
+  { who: 'Dana', she: 'She', topic: 'how much time learners at her school spend playing computer games',
+    factors: ['the age of the learner', 'whether it is a school day or the weekend', 'whether the learner has a games console at home'], not: ['the learner’s shoe size', 'the colour of the school uniform', 'the learner’s favourite number'],
+    goodQ: 'Do older learners spend more time playing computer games than younger learners?', badQ: ['How old is Dana?', 'What is the name of the newest computer game?', 'Should computer games be banned?'],
+    pred: 'Learners spend more time playing computer games at the weekend than on school days.', notPred: ['Computer games are a waste of time.', 'I will ask 40 learners.', 'How long do you play each day?'],
+    collect: 'Ask a random sample of learners from every year group to record their playing time for a week.', badCollect: ['Ask five friends who all like the same game.', 'Ask only the learners in the school computer club.', 'Guess the answer from her own playing time.'] },
+  { who: 'Karim', she: 'He', topic: 'the number of passengers in cars on a busy road',
+    factors: ['the time of day', 'whether it is a weekday or the weekend', 'whether it is a school holiday'], not: ['the colour of the car', 'the first letter of the driver’s name', 'the number on the car’s licence plate'],
+    goodQ: 'Do cars carry more passengers at the weekend than on weekdays?', badQ: ['How many seats does a car have?', 'What colour is the first car that passes?', 'Are cars better than buses?'],
+    pred: 'Most cars on the road at 8 am have only one person in them.', notPred: ['Cars cause too much traffic.', 'I will count cars for one hour.', 'How many people are in your car?'],
+    collect: 'Count the people in every tenth car that passes, at several different times of day and on different days.', badCollect: ['Count only the cars in the school car park at 8 am.', 'Ask his family how many people are usually in their car.', 'Count the cars for five minutes on one morning.'] },
+  { who: 'Mei', she: 'She', topic: 'whether people write faster on paper or with a keyboard',
+    factors: ['how much practice the person has at typing', 'the age of the person', 'the length of the text that is copied'], not: ['the person’s height', 'the colour of the pen', 'the person’s favourite subject'],
+    goodQ: 'Do learners in her year copy a text faster with a keyboard than by hand?', badQ: ['Which keyboard is the most expensive?', 'How fast can Mei type?', 'Is handwriting old-fashioned?'],
+    pred: 'Learners who type every day copy a text faster with a keyboard than by hand.', notPred: ['Typing is more modern than writing.', 'Everyone will copy the same text.', 'Do you prefer typing or writing?'],
+    collect: 'Time a random sample of learners copying the same text once by hand and once with a keyboard.', badCollect: ['Time only the fastest typist in the class.', 'Ask learners which method they think is faster.', 'Time each learner with a different text for each method.'] },
+  { who: 'Lucas', she: 'He', topic: 'how long learners at his school take to travel to school',
+    factors: ['how far the learner lives from the school', 'how the learner travels (on foot, by bus, by car)', 'what time the learner leaves home'], not: ['the learner’s favourite subject', 'the learner’s eye colour', 'the month the learner was born in'],
+    goodQ: 'Do learners who come by bus take longer to get to school than learners who walk?', badQ: ['What time does school start?', 'How does Lucas travel to school?', 'Should the school start later?'],
+    pred: 'Learners who live more than 3 km from the school take more than 20 minutes to get there.', notPred: ['The buses are always late.', 'I will ask one class.', 'How do you get to school?'],
+    collect: 'Ask a random sample of learners from every year group how long today’s journey took and how they travelled.', badCollect: ['Ask only the learners who arrive on the same bus as him.', 'Ask the learners who arrive last in the morning.', 'Time his own journey for a week.'] },
+  { who: 'Amira', she: 'She', topic: 'how many hours learners at her school sleep on a school night',
+    factors: ['the age of the learner', 'what time the learner goes to bed', 'whether the learner uses a phone in bed'], not: ['the learner’s height', 'the colour of the learner’s bedroom', 'the learner’s favourite sport'],
+    goodQ: 'Do younger learners sleep for longer on a school night than older learners?', badQ: ['What time does Amira go to bed?', 'How many hours are there in a night?', 'Is sleeping boring?'],
+    pred: 'Learners who use a phone in bed sleep for less than 8 hours on a school night.', notPred: ['Teenagers are lazy.', 'I will use a questionnaire.', 'What time do you go to bed?'],
+    collect: 'Give a short questionnaire to a random sample of learners from every year group.', badCollect: ['Ask only the learners who look tired in the morning.', 'Ask her three best friends.', 'Ask only the youngest class in the school.'] }];
+
+topic({ id: '6.1a', sec: '6.1', en: 'Planning a statistical investigation', variants: 4,
+  hints: [
+    'A statistical investigation starts with a question that needs data to answer it — a question whose answer can be different for different people or at different times.',
+    'A factor is something that could change the result, such as age or time of day. Thinking about factors tells you what data to collect and who to ask.',
+    'A prediction is a statement that says what you expect the data to show. It must be something the data can prove right or wrong — not an opinion.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3); const c = r.pick(STI); const intro = c.who + ' is investigating ' + c.topic + '. ';
+    if (vi === 0) { const f = r.pick(c.factors); return { q: intro + 'Which of these is a factor that could affect the results?', ans: MQ(r, [f].concat(c.not), 0), sol: ['A factor is something that could make the results different for different people or at different times.', f[0].toUpperCase() + f.slice(1) + ' could change the result, so it is a factor to think about when planning.', 'The other three have no sensible connection with what is being measured.'] }; }
+    if (vi === 1) return { q: intro + 'Which of these is a good statistical question for the investigation?', ans: MQ(r, [c.goodQ].concat(c.badQ), 0), sol: ['A statistical question needs data from many people (or many observations) to answer it, and the answers will vary.', '“' + c.goodQ + '” can be answered by collecting and comparing data.', 'The other questions have a single fixed answer, or ask for an opinion that data cannot settle.'] };
+    if (vi === 2) return { q: intro + 'Which of these is a prediction that the data could test?', ans: MQ(r, [c.pred].concat(c.notPred), 0), sol: ['A prediction says what you expect the data to show, and the data must be able to prove it right or wrong.', '“' + c.pred + '” can be checked against the data.', 'The others are an opinion, a plan and a question — none of them says what the data will show.'] };
+    return { q: intro + 'Which is the best way to collect the data?', ans: MQ(r, [c.collect].concat(c.badCollect), 0), sol: ['Good data comes from a sample that is big enough and represents everyone the investigation is about.', c.collect.replace(/\.$/, '') + ': this covers different kinds of people or times, so the data is fair.', 'The other methods use too few people, or only people of one kind, so the results could be misleading.'] };
+  } });
+
+const STP = [
+  { place: 'A school has # learners', pop: [600, 750, 900, 1200], unit: 'learners', frame: 'the school register', one: 'learner', where: 'the whole school',
+    bad: n => ['Ask the first ' + n + ' learners who arrive in the morning', 'Ask ' + n + ' of your friends', 'Ask for volunteers and take the first ' + n], same: 'who are all in the same year group', self: 'who chose to answer an online poll' },
+  { place: 'A town has # households', pop: [4000, 6000, 9000], unit: 'households', frame: 'a list of all the addresses in the town', one: 'household', where: 'the whole town',
+    bad: n => ['Visit the ' + n + ' houses nearest to the town hall', 'Choose ' + n + ' households that are all in one street', 'Ask for volunteers on the town website and take the first ' + n], same: 'that are all in the same street', self: 'that chose to reply to a leaflet' },
+  { place: 'A sports club has # members', pop: [240, 360, 480, 600], unit: 'members', frame: 'the membership list', one: 'member', where: 'the whole club',
+    bad: n => ['Ask the first ' + n + ' members who arrive on Saturday', 'Ask ' + n + ' members who all play in one team', 'Ask for volunteers and take the first ' + n], same: 'who all play in the same team', self: 'who chose to reply to an email' },
+  { place: 'A factory makes # lamps in a day', pop: [800, 1200, 2000], unit: 'lamps', frame: 'the production line', one: 'lamp', where: 'the whole day',
+    bad: n => ['Take the first ' + n + ' lamps made in the morning', 'Take the ' + n + ' lamps nearest to the door', 'Let a worker choose the ' + n + ' lamps that look best'], same: 'that were all made in the first hour', self: 'that were picked because they look perfect' },
+  { place: 'A library has # members', pop: [1500, 2400, 3000], unit: 'members', frame: 'the list of members', one: 'member', where: 'the whole list',
+    bad: n => ['Ask the first ' + n + ' members who visit on Monday', 'Ask the ' + n + ' members who borrow the most books', 'Ask for volunteers and take the first ' + n], same: 'who all visited on the same morning', self: 'who chose to fill in a form' }];
+
+topic({ id: '6.1b', sec: '6.1', en: 'Choosing a sample', variants: 4,
+  hints: [
+    'The population is everyone (or everything) the investigation is about. A sample is the smaller group that you actually collect data from.',
+    'A sample is useful only if it is like the population in miniature. The safest way to get that is to choose at random, so that everyone has the same chance of being picked.',
+    'Bigger random samples give more reliable results — but a big sample chosen in an unfair way is still unfair.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3); const c = r.pick(STP); const P = r.pick(c.pop); const n = r.pick([20, 30, 40, 50, 60].filter(k => P % k === 0)); const start = c.place.replace('#', big(P)) + '. ';
+    if (vi === 0) { const askPop = r() < 0.5; return { q: start + 'Data is collected from ' + n + ' of the ' + c.unit + '. What is the ' + (askPop ? 'population' : 'sample') + '?', ans: MQ(r, askPop ? ['All ' + big(P) + ' ' + c.unit, 'The ' + n + ' ' + c.unit + ' that data is collected from', 'The data that is collected', 'The person who collects the data'] : ['The ' + n + ' ' + c.unit + ' that data is collected from', 'All ' + big(P) + ' ' + c.unit, 'The data that is collected', 'The questions that are asked'], 0), sol: ['The population is the whole group the investigation is about: all ' + big(P) + ' ' + c.unit + '.', 'The sample is the part of the population that data is actually collected from: the ' + n + ' ' + c.unit + '.'] }; }
+    if (vi === 1) { const good = 'Number every ' + c.one + ' on ' + c.frame + ' and use a random number generator to pick ' + n;
+      return { q: start + 'A sample of ' + n + ' is needed. Which method gives every ' + c.one + ' the same chance of being chosen?', ans: MQ(r, [good].concat(c.bad(n)), 0), sol: ['“The same chance for everyone” is what random means. A random number generator (or names drawn from a hat) does not prefer anyone.', 'In each of the other methods some ' + c.unit + ' have no chance at all of being chosen, so the sample could be very different from the population.'] }; }
+    if (vi === 2) { const k = P / n; return { q: start + 'A sample of ' + n + ' is chosen from a list by taking every kth item on the list. Work out k.', ans: N(k), sol: ['The ' + n + ' chosen ' + c.unit + ' must be spread evenly through the whole list of ' + big(P) + '.', ['Divide the size of the population by the size of the sample.', P + '/' + n + '=' + k], 'So every ' + k + (k % 10 === 1 && k !== 11 ? 'st' : k % 10 === 2 && k !== 12 ? 'nd' : k % 10 === 3 && k !== 13 ? 'rd' : 'th') + ' one on the list is chosen. Choosing the starting point at random keeps the sample fair.'] }; }
+    const big1 = r.pick([80, 100, 120]); return { q: start + 'Which sample is likely to give the most reliable results about all the ' + c.unit + '?', ans: MQ(r, [big1 + ' ' + c.unit + ' chosen at random from ' + c.where, '5 ' + c.unit + ' chosen at random from ' + c.where, big1 + ' ' + c.unit + ' ' + c.same, (2 * big1) + ' ' + c.unit + ' ' + c.self], 0), sol: ['A reliable sample needs two things: it must be chosen fairly (at random, from the whole population), and it must be big enough.', '5 is far too few — one unusual ' + c.one + ' would change the result a lot.', 'The other two samples are large, but they are not chosen fairly, so the ' + c.unit + ' in them may all be alike in some way. Size cannot repair an unfair method.'] };
+  } });
+
+/* ---------- 6.2 Bias ---------- */
+/* a representative sample from three groups (also used for the workbook's village question) */
+function stGroups(place, names, labs, gs, n) { const tot = gs[0] + gs[1] + gs[2]; const raw = gs.map(x => x * n / tot); const as = raw.map(x => Math.round(x)); const exact = raw.every(x => Number.isInteger(x));
+  return { q: place.replace('#', tot) + ': ' + gs[0] + ' ' + names[0] + ', ' + gs[1] + ' ' + names[1] + ' and ' + gs[2] + ' ' + names[2] + '. A representative sample of ' + n + ' is needed. How many should be chosen from each group?', calc: !exact, ans: multi(...labs.map((nm, i) => [nm, N(as[i])])), sol: ['Each group must be the same fraction of the sample as it is of the whole population.', { en: 'The sample is ' + n + ' out of ' + tot + '. Multiply each group by that fraction.', tex: gs.map((x, i) => '\\dfrac{' + x + '}{' + tot + '} \\times ' + n + (exact ? ' = ' + as[i] : texEq(raw[i]))).join(',\\quad ') }, exact ? 'Check: ' + as.join(' + ') + ' = ' + n + '.' : 'Round each one to the nearest whole number: ' + as.join(', ') + '. Check: ' + as.join(' + ') + ' = ' + n + '.'] }; }
+
+topic({ id: '6.2a', sec: '6.2', en: 'Representative samples', variants: 3,
+  hints: [
+    'A representative sample has the same mix as the population. If 56% of the population are female, about 56% of the sample should be female too.',
+    'So work out that percentage (or that fraction) of the sample size: 56% of 60 is $0.56 × 60 = 33.6$.',
+    'People cannot be split, so round to the nearest whole number — 34 here. Check that the groups still add up to the sample size.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 2);
+    for (let g = 0; g < 500; g++) {
+      if (vi === 0) { const exact = r() < 0.5; const [what, g1, g2] = r.pick([['the audience at a concert', 'female', 'male'], ['the members of a club', 'adults', 'children'], ['the learners in a school', 'girls', 'boys'], ['the visitors to a museum', 'local people', 'tourists']]); const p = r.pick([55, 56, 60, 62, 64, 65, 70, 72, 45, 35, 40, 58]); const n = r.pick([20, 40, 50, 60, 80, 25, 30]); const v1 = p * n / 100; const isInt = Number.isInteger(v1); if (exact !== isInt) continue; if (!isInt && Math.abs(v1 - Math.round(v1) ) > 0.4) continue; if (!isInt && Math.abs((v1 % 1) - 0.5) < 0.05) continue; const a1 = Math.round(v1), a2 = n - a1;
+        return { q: p + '% of ' + what + ' are ' + g1 + ' and ' + (100 - p) + '% are ' + g2 + '. A representative sample of ' + n + ' people is chosen. How many of each should be in the sample?', calc: !isInt, ans: multi([g1[0].toUpperCase() + g1.slice(1), N(a1)], [g2[0].toUpperCase() + g2.slice(1), N(a2)]), sol: ['The sample must have the same mix as the whole group, so ' + p + '% of the sample should be ' + g1 + '.', { en: 'Find ' + p + '% of ' + n + '.', tex: fx(p / 100) + ' \\times ' + n + ' = ' + fx(v1) }, isInt ? { en: 'The rest of the sample are ' + g2 + '.', tex: n + ' - ' + a1 + ' = ' + a2 } : { en: 'You cannot have part of a person, so round to the nearest whole number: ' + a1 + '. The rest of the sample are ' + g2 + '.', tex: n + ' - ' + a1 + ' = ' + a2 }, isInt ? 'Check: ' + (100 - p) + '% of ' + n + ' is ' + a2 + ', so the two groups fit together.' : 'Check: ' + (100 - p) + '% of ' + n + ' is ' + fx(n - v1) + ', which rounds to ' + a2 + ' as well.'] }; }
+      if (vi === 1) { const exact = r() < 0.5; const [place, names, labs] = r.pick([['A village has # people', ['are under 18', 'are aged 18 to 55', 'are over 55'], ['Under 18', '18 to 55', 'Over 55']], ['A school has # learners', ['are in Year 7', 'are in Year 8', 'are in Year 9'], ['Year 7', 'Year 8', 'Year 9']], ['A sports club has # members', ['are juniors', 'are adults', 'are seniors'], ['Juniors', 'Adults', 'Seniors']]]); let gs, n;
+        if (exact) { const base = r.pick([10, 20, 5]); n = r.pick([40, 50, 60, 30]); gs = [r.ri(2, 12), r.ri(8, 30), r.ri(2, 14)].map(x => x * base); const tot = gs[0] + gs[1] + gs[2]; if (tot % n !== 0 && (gs[0] * n) % tot !== 0) continue; if (gs.some(x => (x * n) % tot !== 0)) continue; }
+        else { gs = [r.ri(40, 130), r.ri(200, 380), r.ri(60, 170)]; n = r.pick([40, 50, 60]); }
+        const tot = gs[0] + gs[1] + gs[2]; const raw = gs.map(x => x * n / tot); const as = raw.map(x => Math.round(x)); if (as[0] + as[1] + as[2] !== n) continue; if (!exact && raw.some(x => Math.abs((x % 1) - 0.5) < 0.12 || Number.isInteger(x))) continue;
+        return stGroups(place, names, labs, gs, n); }
+      const [place, part] = r.pick([['A school has # learners', 'are in Year 9'], ['A company has # workers', 'work part-time'], ['A club has # members', 'are under 16']]); const tot = r.pick([400, 600, 800, 900, 1200]); const frac = r.pick([[1, 8], [3, 20], [1, 5], [1, 4], [3, 10], [2, 5]]); const sub = tot * frac[0] / frac[1]; const n = r.pick([40, 60, 80, 100, 120]); const a = sub * n / tot; if (!Number.isInteger(a) || !Number.isInteger(sub)) continue;
+      return { q: place.replace('#', big(tot)) + ', and ' + sub + ' of them ' + part + '. A representative sample of ' + n + ' is chosen. How many of the sample should be from that group?', ans: N(a), sol: [{ en: 'Find what fraction of the whole the group is.', tex: '\\dfrac{' + sub + '}{' + tot + '} = ' + tfr(frac[0], frac[1]) }, { en: 'The sample must contain the same fraction.', tex: tfr(frac[0], frac[1]) + ' \\times ' + n + ' = ' + a }] };
+    }
+    throw new Error('6.2a');
+  } });
+
+const STB = [
+  { q: 'A teacher wants to know what her class thinks about homework. She asks the five learners who sit at the front.', good: 'The five learners were not chosen at random, so they may not think the same as the rest of the class.', bad: ['Five is an odd number, and samples must be even.', 'Learners at the front always tell the truth.', 'She should have asked only one learner.'], why: 'Learners who choose to sit at the front may be different from the others — for example, keener on school work. A fair sample gives every learner in the class the same chance.' },
+  { q: 'A radio programme asks listeners to phone in with their opinion of an insurance company. 72% of the callers are unhappy with the company.', good: 'People who are unhappy are more likely to bother phoning, so the callers do not represent all customers.', bad: ['72% is too large to be a real percentage.', 'Radio listeners do not have insurance.', 'The result is fair, because anyone could phone in.'], why: 'This is a self-selected sample: people decide for themselves whether to take part, and those with strong feelings (usually complaints) take part far more often.' },
+  { q: 'A council wants to know what people in the town think about a new shopping centre. It puts a poll on its social media page.', good: 'Only people who use social media and follow the council will see the poll, so many groups are left out.', bad: ['Polls on social media are always wrong.', 'Too many people will answer.', 'People cannot have opinions about shopping centres.'], why: 'Older people, and people who do not follow the council online, have little chance of being included, so the sample does not represent the whole town.' },
+  { q: 'To find out how people in a town travel to work, a researcher interviews people at the railway station at 8 am.', good: 'Everyone at the station is probably travelling by train, so other ways of travelling are missed.', bad: ['8 am is too early for people to answer questions.', 'The researcher should interview only one person.', 'Railway stations are too noisy for a survey.'], why: 'The place where a sample is taken decides who can be in it. People who drive, cycle or walk to work are not at the station.' },
+  { q: 'A sports shop wants to know how much exercise people in the town do. It asks customers who come into the shop.', good: 'People who shop for sports equipment probably exercise more than most people in the town.', bad: ['Customers never answer questions in shops.', 'The shop should ask only its own staff.', 'Exercise cannot be measured.'], why: 'The sample comes from a group that is already likely to exercise, so the result would be higher than for the whole town.' },
+  { q: 'An advert says: “81% of women found that this cream made them look younger.” In small print it says the result is based on 48 women who used the cream for a month.', good: 'We do not know how the 48 women were chosen or how the question was asked, and 48 is a small sample.', bad: ['81% of 48 is not a whole number, so the advert must be a lie.', 'A month is too long for a fair test.', 'Adverts are not allowed to use percentages.'], why: 'Before trusting the claim you would want to know who chose the women, whether they were paid or given the cream free, and exactly what they were asked. A small, hand-picked sample proves very little.' }];
+
+topic({ id: '6.2b', sec: '6.2', en: 'Spotting bias in a sample', variants: 4,
+  hints: [
+    'A sample is biased if some people have more chance of being in it than others — so the sample is not a fair picture of the whole population.',
+    'Ask yourself: who has no chance (or very little chance) of being chosen by this method? If you can name a group, the method is probably biased.',
+    'Where, when and how you ask all matter: asking at a railway station finds train users; asking online finds people who are online; asking for volunteers finds people with strong opinions.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 3);
+    if (vi <= 1) { const c = r.pick(vi === 0 ? STB.slice(0, 3) : STB.slice(3)); return { q: c.q + ' Why might the result be biased?', ans: MQ(r, [c.good].concat(c.bad), 0), sol: ['A method is biased if it favours some people over others.', c.why] }; }
+    if (vi === 2) { const [topic1, good, bad] = r.pick([
+        ['what people in a town think about a new shopping centre', 'Send a letter to addresses chosen at random from the whole town', ['Put a poll on the town’s social media page', 'Ask people who are shopping in the old town centre on Monday morning', 'Ask the owners of the shops that will move into the new centre']],
+        ['whether learners at a school like the school lunches', 'Choose learners at random from the school register and ask each of them', ['Ask the learners in the lunch queue', 'Ask the members of the school council', 'Put a suggestion box outside the canteen']],
+        ['how often people in a city use the public library', 'Telephone households chosen at random from across the city', ['Ask people as they leave the library', 'Put a questionnaire on the library website', 'Ask the people who work in the library']],
+        ['which sports the members of a sports club want more of', 'Choose members at random from the full membership list and ask each of them', ['Ask the members who are at football training on Tuesday', 'Ask the club’s coaches', 'Ask the first 20 members who reply to an email']]]);
+      return { q: 'A survey is planned to find out ' + topic1 + '. Which method is most likely to give a representative sample?', ans: MQ(r, [good].concat(bad), 0), sol: ['A representative sample comes from a method that gives everyone in the population the same chance of being included.', good + ': nobody is favoured or left out.', 'Each of the other methods reaches only one kind of person, or only people who choose to answer.'] }; }
+    const [method, adv, dis] = r.pick([['a poll on social media', 'It is quick and cheap, and can reach a lot of people.', 'Only people who use that social media site can answer, and people can choose whether to take part.'], ['sending letters to homes chosen at random', 'Every household has the same chance of being chosen.', 'It is slow and costs money, and many people do not reply.'], ['asking people in the street', 'It is quick, and the interviewer can explain the questions.', 'Only people who are in that street at that time can be asked.']]); const askAdv = r() < 0.5;
+    const pool = ['It always gives exactly the right answer.', 'Nobody ever refuses to answer.', 'It needs no planning at all.', 'It can be used only once.'];
+    return { q: 'A council collects opinions by ' + method + '. Which of these is ' + (askAdv ? 'an advantage' : 'a disadvantage') + ' of this method?', ans: MQ(r, [askAdv ? adv : dis].concat(r.sh(pool).slice(0, 3)), 0), sol: ['Advantage: ' + adv, 'Disadvantage: ' + dis, 'Every way of collecting data has both. A good plan chooses the method whose disadvantages matter least for the question.'] };
+  } });
+
+topic({ id: '6.2x', sec: '6.2', en: 'Biased questions and working backwards from a sample', ext: true, variants: 3,
+  hints: [
+    'A question is biased (a leading question) if its wording pushes people towards one answer — for example by starting with “Do you agree that …” or by using words such as “too much”.',
+    'A fair question is neutral and specific. Instead of “Do you eat too much meat?”, ask “On how many days last week did you eat meat?”',
+    'In a representative sample the groups are in the same ratio as in the population. If 40% are men and 60% are women, there are 3 women for every 2 men.'],
+  gen(r, vi) {
+    vi = vi ?? r.ri(0, 2);
+    const QS = [
+      ['Do you agree that people are overweight because they are greedy and eat too much?', 'It tells people what to think before they answer, and uses the insulting word “greedy”.', 'How many meals do you usually eat in a day?'],
+      ['Do you eat too much meat?', 'The words “too much” ask for a judgement, and different people mean different things by them.', 'On how many days last week did you eat meat?'],
+      ['Don’t you think the school day is far too long?', 'The wording “Don’t you think … far too long” pushes people to say yes.', 'How long do you think the school day should be?'],
+      ['Do you agree that our wonderful new library is better than the old one?', 'The word “wonderful” praises the library before the person has answered.', 'Which library do you prefer, the new one or the old one?'],
+      ['Most sensible people recycle. Do you?', 'It suggests that anyone who answers “no” is not sensible.', 'How often do you recycle paper: always, sometimes or never?']];
+    if (vi === 0) { const [q0, why] = r.pick(QS); return { q: 'A survey contains this question: “' + q0 + '” Why is it a biased question?', ans: MQ(r, [why, 'It can be answered with yes or no.', 'It is too short.', 'It asks about only one topic.'], 0), sol: ['A biased (leading) question pushes people towards one particular answer.', why, 'Being short, or having a yes/no answer, does not make a question biased.'] }; }
+    if (vi === 1) { const pick = r.sh(QS); const fair = pick[0][2]; const leading = [pick[1][0], pick[2][0], pick[3][0]]; return { q: 'Which of these survey questions is not biased?', ans: MQ(r, [fair].concat(leading), 0), sol: ['“' + fair + '” is neutral: it does not suggest which answer is expected, and it asks for something definite.', 'Each of the other questions uses wording that pushes people towards one answer.'] }; }
+    for (let g = 0; g < 200; g++) { const p = r.pick([40, 30, 25, 20, 60, 35, 45]); const [grp, g1, g2] = r.pick([['teachers', 'men', 'women'], ['learners', 'boys', 'girls'], ['visitors', 'adults', 'children']]); const n1 = r.ri(8, 45); const n2 = n1 * (100 - p) / p; if (!Number.isInteger(n2)) continue; const f = F(100 - p, p);
+      return { q: 'In a group of ' + grp + ', ' + p + '% are ' + g1 + ' and ' + (100 - p) + '% are ' + g2 + '. A representative sample contains ' + n1 + ' ' + g1 + '. How many ' + g2 + ' should it contain?', ans: N(n2), sol: ['The sample must have the same mix: ' + p + '% ' + g1 + ' and ' + (100 - p) + '% ' + g2 + '.', { en: n1 + ' ' + g1 + ' are ' + p + '% of the sample. Find 1% and then ' + (100 - p) + '%.', tex: n1 + ' \\div ' + p + ' \\times ' + (100 - p) + ' = ' + n2 }, { en: 'Or use the ratio ' + g2 + ' : ' + g1 + ' = ' + (100 - p) + ' : ' + p + '.', tex: n1 + ' \\times ' + tF(f) + ' = ' + n2 }, 'Check: the whole sample is ' + (n1 + n2) + ' people, and ' + n1 + ' out of ' + (n1 + n2) + ' is ' + p + '%.'] }; }
+    throw new Error('6.2x');
+  } });
+
 /* ===================== CHAPTER 8 · FRACTIONS ===================== */
 chapter(8, 'Fractions');
 section('8.1', 'Fractions and recurring decimals');
@@ -5056,6 +5203,19 @@ const MTHEORY = {
       'An inequality describes a set of numbers. On a number line an open circle means “not included” and a filled circle means “included”.',
       'Solve an inequality like an equation. Adding, subtracting, and multiplying or dividing by a positive number keep the sign the same.',
       'Multiplying or dividing by a negative number reverses the sign. You can avoid that by moving the letter to the side where it is positive.'], ['2x-3<19', '2x<22', 'x<11', '-2x<8', 'x>-4'])],
+  m6: [
+    nt('Planning an investigation', [
+      'Start with a statistical question — one that needs data to answer it, and whose answers vary.',
+      'List the factors that could affect the results, such as age or time of day. They tell you what data to collect and from whom.',
+      'A prediction says what you expect the data to show. It must be something the data can prove right or wrong.']),
+    nt('Population and sample', [
+      'The population is everyone or everything the investigation is about. A sample is the smaller group that data is collected from.',
+      'A random sample gives every member of the population the same chance of being chosen. Larger random samples give more reliable results.']),
+    nt('Representative samples', [
+      'A representative sample has the same mix as the population. Work out the same percentage or fraction of the sample size for each group, and round to whole numbers.'], ['0.56*60=33.6']),
+    nt('Bias', [
+      'A sample is biased when some people have more chance of being in it than others. Ask: who has no chance of being chosen by this method?',
+      'A question is biased when its wording pushes people towards one answer. Fair questions are neutral and specific.'])],
   m8: [
     nt('Terminating and recurring decimals', [
       'A fraction is a division. If the division stops, the decimal is terminating; if a digit or group of digits repeats for ever, it is recurring.',
@@ -5144,6 +5304,7 @@ const WB_DIRECT = {
   br: p => wbTidy(frB_brackets(wbF(p[0]), wbF(p[1]), wbF(p[2]), !!p[3], !!p[4]).it),
   ord: p => wbTidy(frB_order(wbF(p[0]), wbF(p[1]), wbF(p[2]), p[3], !!p[4], !!p[5]).it),
   r11: p => R11B[p[0]](...p.slice(1)),
+  vil: p => stGroups('A village has # people', ['are under 18', 'are aged 18 to 55', 'are over 55'], ['Under 18', '18 to 55', 'Over 55'], p[0], p[1]),
   prob: p => wbTidy(p[0] === 'tri' ? frB_tri(wbF(p[1]), wbF(p[2]), wbF(p[3])).it : frB_mass(p[1], p[2], p[3], wbF(p[4]), wbF(p[5]), wbF(p[6])).it)
 };
 function WBS(id, sk, ref, en, vis, origs) { const T0 = wbTopic(sk); return wbq({ id, sk, ref, en, sets: origs.map(o => ({ v: o[0], s: o[1] })), vary: r => ({ v: pk(r, vis), s: r.ri(1, 2147483646) }), make: p => T0.gen(mkRng(p.s), p.v) }); }
@@ -5222,6 +5383,12 @@ WBS('w4.3.3', '4.3b', "Exercise 4.3 · Q3, Q4", "Whole numbers that satisfy an i
 WBS('w4.3.5', '4.3c', "Exercise 4.3 · Q5, Q6, Q9", "Solving inequalities", [0,1,2,3], [[0,259],[0,64853],[0,5966],[1,612],[0,290],[0,33318],[1,4356],[1,27678],[2,15892],[3,4649]]);
 WBS('w4.3.11', '4.3d', "Exercise 4.3 · Q11", "Inequalities with a negative term", [0,1,2], [[0,3119],[0,159480],[1,3790]]);
 WBS('w4.3.12', '4.3x', "Exercise 4.3 · Q12–Q16", "Writing and using inequalities", [0,1,2,3], [[0,14],[1,4],[3,68],[3,211],[3,1262],[2,26119],[2,13688],[2,16375],[2,78519]]);
+WBS('w6.1.1', '6.1a', "Exercise 6.1 · Q1", "Planning: time spent on computer games", [0,1,2,3], [[0,7],[1,7],[2,7],[3,7]]);
+WBS('w6.1.2', '6.1a', "Exercise 6.1 · Q2, Q3", "Planning: passengers in cars, speed of writing", [0,1,2,3], [[0,12],[1,12],[2,12],[3,12],[0,6],[1,6],[2,6],[3,6]]);
+WBS('w6.2.1', '6.2a', "Exercise 6.2 · Q1", "A representative sample from percentages", [0,2], [[0,476]]);
+WBD('w6.2.5', '6.2a', "Exercise 6.2 · Q5", "A representative sample from three groups", [1], 'vil', [[[73,327,128],50]]);
+WBS('w6.2.2', '6.2b', "Exercise 6.2 · Q2, Q3, Q4, Q6", "Spotting bias", [0,1,2,3], [[0,7],[0,1],[2,7],[3,7],[3,1],[3,2],[1,2]]);
+WBS('w6.2.7', '6.2x', "Exercise 6.2 · Q7, Q8", "Biased questions and working backwards", [0,1,2], [[0,7],[0,12],[2,66]]);
 WBS('w8.1.1', '8.1a', "Exercise 8.1 · Q1, Q3", "Fractions as terminating decimals", [0,1,2], [[1,6],[2,27],[1,13],[1,8],[0,3],[0,57],[2,18],[0,20],[0,52],[0,51],[2,39],[0,15],[2,8]]);
 WBS('w8.1.2', '8.1b', "Exercise 8.1 · Q2", "Recurring decimals", [0,1,2], [[0,23],[1,13],[0,19],[0,8],[2,16],[2,17]]);
 WBS('w8.1.5', '8.1c', "Exercise 8.1 · Q5, Q6, Q7, Q8", "Terminating or recurring?", [0,1,2,3], [[3,7],[3,8],[3,12],[3,6],[0,142],[1,7],[1,19],[2,7],[2,23],[2,8],[2,15],[2,12],[2,18],[1,2],[1,1],[1,69],[1,3]]);
@@ -5358,7 +5525,7 @@ function importProgress(f) {
 }
 
 /* ---------- PWA ---------- */
-const APP_VERSION = '20261120-1837';
+const APP_VERSION = '20261123-1338';
 function isStandalone() { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.__installEvt = e; });
 /* no service worker: the app is one self-contained file and makes no network requests */
@@ -5378,25 +5545,30 @@ const readyNote = r => 'topics ' + r.m + '/' + r.n + ' · workbook ' + r.sd + '/
 /* ---------- plan by days until the last exam ---------- */
 function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 const PLAN_SUBJ = () => SUBJECTS.filter(s => !s.soon && daysTo(EXD[s.id]) >= 0).map(s => s.id);
-/* chapters that are new to the student: their topics are spread evenly over the days (about one a day, second in the day's list)
-   instead of all coming at the end in chapter order */
-const SPREAD = ['m11'];
+/* chapters whose topics are spread evenly over the days — each chapter on its own, about one topic a day, from second place
+   in the day's list — instead of coming in chapter order: chapter 11 (new to Marta) and chapter 6 (back in the course late).
+   They are never pulled forward to fill a day: when the other topics are done, a day is shorter (Start still offers the next topics). */
+const SPREAD = ['m6', 'm11'];
+/* chapters that are new to the student: a topic never tried yet shows a "New topic" pointer to the notes */
+const NEWCH = ['m11'];
 function planBuild(from, exclude) {
   const cap0 = Math.max(3, Math.round(GOAL() / 3)); const subs = PLAN_SUBJ(); const rem = {}, spr = {};
-  subs.forEach(s => { const all = SKILLS.filter(k => k.subj === s && !isM(k.id) && !(exclude && exclude.has(k.id))); spr[s] = all.filter(k => SPREAD.includes(k.ch)); rem[s] = all.filter(k => !SPREAD.includes(k.ch)); });
+  subs.forEach(s => { const all = SKILLS.filter(k => k.subj === s && !isM(k.id) && !(exclude && exclude.has(k.id))); rem[s] = all.filter(k => !SPREAD.includes(k.ch)); spr[s] = SPREAD.map(ch => all.filter(k => k.ch === ch)); });
+  const nSpr = s => spr[s].reduce((t, l) => t + l.length, 0);
   const last = Math.max(...subs.map(s => daysTo(EXD[s])), 0); const out = []; const t0 = today0();
   for (let i = from; i <= last; i++) {
     const d = addDays(t0, i); const exams = subs.filter(s => daysTo(EXD[s]) === i); const mocks = subs.filter(s => daysTo(EXD[s]) === i + 1);
     let cap = cap0 - (mocks.length ? 2 : 0) - (exams.length ? Math.ceil(cap0 / 2) : 0); cap = Math.max(exams.length ? 0 : 1, cap);
-    const cand = subs.filter(s => daysTo(EXD[s]) > i + 1 && rem[s].length + spr[s].length).map(s => ({ s, u: (rem[s].length + spr[s].length) / Math.max(1, daysTo(EXD[s]) - i - 1) })).sort((a, b) => b.u - a.u).slice(0, 3);
+    const cand = subs.filter(s => daysTo(EXD[s]) > i + 1 && rem[s].length + nSpr(s)).map(s => ({ s, u: (rem[s].length + nSpr(s)) / Math.max(1, daysTo(EXD[s]) - i - 1) })).sort((a, b) => b.u - a.u).slice(0, 3);
     const items = []; const U = cand.reduce((t, c) => t + c.u, 0); let left = cap;
-    cand.forEach((c, j) => { let q = j === cand.length - 1 ? left : Math.max(1, Math.round(cap * c.u / U)); q = Math.min(q, left, rem[c.s].length + spr[c.s].length); if (q > 0) {
-      const nS = Math.min(q, spr[c.s].length, Math.ceil(spr[c.s].length / Math.max(1, daysTo(EXD[c.s]) - i - 1)));
-      const take = rem[c.s].splice(0, q - nS); let sp = spr[c.s].splice(0, nS); if (take.length + sp.length < q) sp = sp.concat(spr[c.s].splice(0, q - take.length - sp.length));
+    cand.forEach((c, j) => { let q = j === cand.length - 1 ? left : Math.max(1, Math.round(cap * c.u / U)); q = Math.min(q, left, rem[c.s].length + nSpr(c.s)); if (q > 0) {
+      const dl = Math.max(1, daysTo(EXD[c.s]) - i - 1);   /* study days left, this one included */
+      let sp = []; spr[c.s].forEach(l => { const n = Math.min(Math.ceil(l.length / dl), q - sp.length); if (n > 0) sp = sp.concat(l.splice(0, n)); });
+      const take = rem[c.s].splice(0, q - sp.length);
       items.push({ s: c.s, sk: take.slice(0, 1).concat(sp, take.slice(1)) }); left -= take.length + sp.length; } });
     out.push({ d, i, items, mocks, exams });
   }
-  const behind = {}; subs.forEach(s => { if (rem[s].length + spr[s].length) behind[s] = rem[s].length + spr[s].length; });
+  const behind = {}; subs.forEach(s => { if (rem[s].length + nSpr(s)) behind[s] = rem[s].length + nSpr(s); });
   return { days: out, behind };
 }
 function todayPlan() {
@@ -5798,11 +5970,11 @@ const IC = {
 const ico = (k, cls) => '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + IC[k] + '</svg>';
 const EXD = { math: '2026-11-30' };
 /* if the exam date ever changes: raise EXD_VER — only today's plan and today's auto goal are recalculated; progress, history and reports stay */
-const EXD_VER = 4;   /* 2: the exam moved from 24 to 30 November · 3: chapter 6 removed from the course · 4: chapter 11 added */
+const EXD_VER = 5;   /* 2: the exam moved from 24 to 30 November · 3: chapter 6 removed · 4: chapter 11 added · 5: chapter 6 back in the course */
 /* a saved test that uses a chapter which is no longer in the course cannot be rebuilt: it is closed (an unfinished one with a message); its score, if finished, stays in the history */
 function checkCurExam() { const c = DB.cur; if (!c || !Array.isArray(c.chs)) return; const chs = c.chs.map(x => typeof x === 'number' ? 'm' + x : x);
   if (chs.every(x => CHAPTERS.some(k => k.id === x)) && (c.pick || []).every(p => SKILLS.some(s => s.id === p[1]))) return;
-  const unfinished = !c.done; DB.cur = null; EX = null; save(); if (unfinished) setTimeout(() => toast('Your unfinished test included chapter 6, which is no longer part of the exam. Please start a new test.'), 400); }
+  const unfinished = !c.done; DB.cur = null; EX = null; save(); if (unfinished) setTimeout(() => toast('Your unfinished test included topics that are no longer part of the exam. Please start a new test.'), 400); }
 function migrateExamDates() { if ((DB.exdV || 1) >= EXD_VER) return; DB.plan = null; const k = ymd(new Date()); if (DB.goalH && DB.goalH[k]) DB.goalH[k] = Math.min(DB.goalH[k], autoGoal()); DB.exdV = EXD_VER; save(); }
 const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -6329,7 +6501,7 @@ function renderPractice() {
   h += '<section class="card q">';
   if (sc) { const [d, n] = scCount(scOf(ch.id)); h += '<div class="schead"><span class="pill b">' + (sc.ext ? 'Challenge · workbook' : 'Workbook question') + '</span> <b>' + esc(sc.en) + '</b><div class="meta">' + esc(sc.src.en) + ' · ' + (P.orig >= 0 ? (sc.sets.length > 1 ? 'from the workbook: part ' + (P.orig + 1) + ' of ' + sc.sets.length : 'from the workbook') : 'new numbers') + (sc.ext ? '' : ' · done in this chapter: ' + d + ' of ' + n) + (scDone(sc) ? ' · already done ✓' : '') + '</div></div>'; }
   if (P.target === 'plan') { const ps = planState(); h += '<div class="planchip">' + ico('cal') + '<span>' + (ps.tp.sk.includes(sk.id) ? 'Today’s plan: ' + (ps.tp.sk.indexOf(sk.id) + 1) + ' of ' + ps.tot : 'Extra topic') + '</span></div>'; }
-  if (!sc && SPREAD.includes(sk.ch) && !(DB.sk[sk.id] || {}).a && !P.done) h += '<div class="newtip">' + ico('books') + '<span><b>New topic.</b> Tap <b>Notes</b> for the rule and a worked example before you start.</span></div>';
+  if (!sc && NEWCH.includes(sk.ch) && !(DB.sk[sk.id] || {}).a && !P.done) h += '<div class="newtip">' + ico('books') + '<span><b>New topic.</b> Tap <b>Notes</b> for the rule and a worked example before you start.</span></div>';
   h += '<div class="qhead"><span>' + sk.code + ' · ' + NM(sk) + (sk.ext ? ' <b class="ext">Challenge</b>' : '') + '</span><span>' + ((it.calc || sk.calc) ? '<span class="nocalc calc">Calculator</span> ' : '') + dotsHtml(sk.id) + '</span></div>';
   h += '<div class="instr">' + tr(it.q) + '</div>' + promptHtml(it);
   h += '<div class="ansbox">';
@@ -6522,25 +6694,30 @@ function pickExam(r, chs, mode) {
   const out = []; chs.forEach(ch => { const es = BP[ch].map(e => e[0]); const uniq = [...new Set(es)]; const fresh = r.sh(uniq.filter(id => !cov.has(id))), seen = r.sh(uniq.filter(id => cov.has(id))); fresh.concat(seen).slice(0, Math.min(per[ch], uniq.length)).sort((a, b) => es.indexOf(a) - es.indexOf(b)).forEach(id => out.push([ch, id])); });
   return out;
 }
-function buildExam(seed, chs, mode, pick) {
+/* A saved test must come back with exactly the same questions when the app is opened again (the answers typed so far belong to them).
+   rv 2 (tests started from 23 Nov): the questions come from their own random generator, independent of how the topics were picked.
+   Older saved tests: the picking is replayed on the same generator, so the questions come out as they were first made. */
+const EXAM_RV = 2;
+function buildExam(seed, chs, mode, pick, rv) {
   const r = mkRng(seed); const qs = [];
   if (mode === 'paper') return buildPaper(r, chs);
-  const quickish = !!(MODES[mode] || {}).n;
-  if (quickish && !pick) pick = pickExam(r, chs, mode);
-  const gen = (ch, id, vis) => { const sk = SK(id); const seen = new Set(); const parts = vis.map(vi => { let it; for (let g = 0; g < 6; g++) { it = sk.gen(r, vi < 0 ? undefined : vi); const k = it.q.en + (it.m || it.tex || it.code || it.html || ''); if (!seen.has(k)) { seen.add(k); break; } } return it; }); qs.push({ ch, id, parts }); };
-  if (quickish) { pick.forEach(([ch, id]) => { const e = BP[ch].find(x => x[0] === id); gen(ch, id, [r.pick(e[1])]); }); return { qs, pick }; }
+  const quickish = !!(MODES[mode] || {}).n; let rq = r;
+  if (quickish) { if (rv >= 2) { if (!pick) pick = pickExam(r, chs, mode); rq = mkRng((seed ^ 0x2545F491) >>> 0); }
+    else if (!pick) pick = pickExam(r, chs, mode); else pickExam(r, chs, mode); }
+  const gen = (ch, id, vis) => { const sk = SK(id); const seen = new Set(); const parts = vis.map(vi => { let it; for (let g = 0; g < 6; g++) { it = sk.gen(rq, vi < 0 ? undefined : vi); const k = it.q.en + (it.m || it.tex || it.code || it.html || ''); if (!seen.has(k)) { seen.add(k); break; } } return it; }); qs.push({ ch, id, parts }); };
+  if (quickish) { pick.forEach(([ch, id]) => { const e = BP[ch].find(x => x[0] === id); gen(ch, id, [rq.pick(e[1])]); }); return { qs, pick }; }
   chs.forEach(ch => BP[ch].forEach(([id, vis]) => gen(ch, id, vis)));
   return { qs, pick: null };
 }
 let EX = null; let saveT = null;
 function saveExamSoon() { clearTimeout(saveT); saveT = setTimeout(saveExam, 400); }
-function saveExam() { if (!EX) return; DB.cur = { subj: EX.subj, seed: EX.seed, chs: EX.chs, mode: EX.mode, pick: EX.pick, vals: EX.vals, self: EX.self, t0: EX.t0, t1: EX.t1, done: EX.done, early: EX.early }; save(); }
+function saveExam() { if (!EX) return; DB.cur = { subj: EX.subj, seed: EX.seed, chs: EX.chs, mode: EX.mode, pick: EX.pick, rv: EX.rv, vals: EX.vals, self: EX.self, t0: EX.t0, t1: EX.t1, done: EX.done, early: EX.early }; save(); }
 function startExam(chs, mode) {
   const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
-  EX = { subj: subjOf(chs[0]), seed, chs, mode, vals: {}, self: {}, t0: Date.now(), done: false };
-  const b = buildExam(seed, chs, mode); EX.items = b.qs; EX.pick = b.pick; saveExam(); go('#/exam/run');
+  EX = { subj: subjOf(chs[0]), seed, chs, mode, rv: EXAM_RV, vals: {}, self: {}, t0: Date.now(), done: false };
+  const b = buildExam(seed, chs, mode, null, EXAM_RV); EX.items = b.qs; EX.pick = b.pick; saveExam(); go('#/exam/run');
 }
-function loadExam() { if (EX && EX.items) return EX; if (!DB.cur) return null; EX = Object.assign({}, DB.cur); EX.chs = EX.chs.map(c => typeof c === 'number' ? 'm' + c : c); EX.subj = EX.subj || subjOf(EX.chs[0]); EX.vals = EX.vals || {}; EX.self = EX.self || {}; const b = buildExam(EX.seed, EX.chs, EX.mode, EX.pick); EX.items = b.qs; EX.pick = b.pick; return EX; }
+function loadExam() { if (EX && EX.items) return EX; if (!DB.cur) return null; EX = Object.assign({}, DB.cur); EX.chs = EX.chs.map(c => typeof c === 'number' ? 'm' + c : c); EX.subj = EX.subj || subjOf(EX.chs[0]); EX.vals = EX.vals || {}; EX.self = EX.self || {}; const b = buildExam(EX.seed, EX.chs, EX.mode, EX.pick, EX.rv); EX.items = b.qs; EX.pick = b.pick; return EX; }
 function viewExamSetup() {
   EX = null;
   let h = '<section class="card"><h2>Practice test</h2><div class="meta">exam ' + dateRu(EXD.math) + ' · ' + whenRu(EXD.math) + ' · topics already covered in tests: ' + (() => { const all = new Set(CHAPTERS.flatMap(c => (BP[c.id] || []).map(e => e[0]))); return ((DB.excov || {}).math || []).filter(id => all.has(id)).length + ' of ' + all.size; })() + '</div><p class="muted">The same kinds of questions as in your workbook, with new numbers every time. No hints — everything is checked at the end.</p>';
